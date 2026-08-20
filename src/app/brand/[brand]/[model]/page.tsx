@@ -38,7 +38,7 @@ export default async function ModelPage({
     <>
       <Header />
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-5 pb-16 pt-10">
+        <section className="mx-auto max-w-2xl px-5 pb-4 pt-10">
           <Link
             href={`/brand/${brand.slug}`}
             className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
@@ -46,92 +46,90 @@ export default async function ModelPage({
             <ChevronLeft size={14} />
             {brand.name}
           </Link>
+        </section>
 
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
+        {/* Фото + миниатюры */}
+        <section className="mx-auto max-w-2xl px-5">
+          <CarPlaceholder
+            accent={brand.accent}
+            className="h-64 w-full rounded-2xl sm:h-80"
+          />
+          <div className="mt-3 grid grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
               <CarPlaceholder
+                key={i}
                 accent={brand.accent}
-                className="h-72 w-full rounded-2xl sm:h-96"
+                className="h-14 w-full rounded-lg sm:h-16"
               />
-              <div className="mt-3 grid grid-cols-4 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <CarPlaceholder
-                    key={i}
-                    accent={brand.accent}
-                    className="h-16 w-full rounded-lg sm:h-20"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-                {brand.name} · {model.bodyType}
-              </p>
-              <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-                {model.name}
-              </h1>
-              <p className="mt-2 text-base text-ink-soft">{model.tagline}</p>
-
-              <p className="mt-6 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                {hasMultipleTrims ? "Цена от" : "Цена"}
-              </p>
-              <p className="font-display text-3xl font-bold text-ink">
-                {formatPrice(entryTrim.priceFrom)}
-              </p>
-
-              <div className="mt-6">
-                <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                  Запас хода {hasMultipleTrims ? "(мин. версия)" : ""}
-                </p>
-                <div className="mt-2">
-                  <ChargeBar
-                    valueKm={entryTrim.rangeKm}
-                    maxKm={RANGE_SCALE_MAX}
-                    accent={brand.accent}
-                  />
-                </div>
-              </div>
-
-              <p className="mt-6 text-sm leading-relaxed text-ink-soft">
-                {model.description}
-              </p>
-
-              {hasMultipleTrims && (
-                <div className="mt-7">
-                  <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                    Выберите версию
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {model.trims.map((trim) => (
-                      <Link
-                        key={trim.slug}
-                        href={`/brand/${brand.slug}/${model.slug}/${trim.slug}`}
-                        className="group flex items-center gap-2 rounded-full border border-line bg-surface-card px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink"
-                      >
-                        {trim.name}
-                        <span className="font-mono text-xs text-ink-soft">
-                          {formatPrice(trim.priceFrom)}
-                        </span>
-                        <ArrowUpRight
-                          size={13}
-                          className="text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                        />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8">
-                <ContactCTA modelName={model.name} />
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
+        {/* Переключатель версий сразу под фото */}
+        {hasMultipleTrims && (
+          <section className="mx-auto max-w-2xl px-5 pt-6">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+              Выберите версию
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {model.trims.map((trim) => (
+                <Link
+                  key={trim.slug}
+                  href={`/brand/${brand.slug}/${model.slug}/${trim.slug}`}
+                  className="group flex items-center gap-2 rounded-full border border-line bg-surface-card px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink"
+                >
+                  {trim.name}
+                  <span className="font-mono text-xs text-ink-soft">
+                    {formatPrice(trim.priceFrom)}
+                  </span>
+                  <ArrowUpRight
+                    size={13}
+                    className="text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Заголовок, цена, запас хода, описание — одна колонка */}
+        <section className="mx-auto max-w-2xl px-5 pt-8">
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            {brand.name} · {model.bodyType}
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            {model.name}
+          </h1>
+          <p className="mt-2 text-base text-ink-soft">{model.tagline}</p>
+
+          <p className="mt-6 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            {hasMultipleTrims ? "Цена от" : "Цена"}
+          </p>
+          <p className="font-display text-3xl font-bold text-ink">
+            {formatPrice(entryTrim.priceFrom)}
+          </p>
+
+          <div className="mt-6">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+              Запас хода {hasMultipleTrims ? "(мин. версия)" : ""}
+            </p>
+            <div className="mt-2">
+              <ChargeBar
+                valueKm={entryTrim.rangeKm}
+                maxKm={RANGE_SCALE_MAX}
+                accent={brand.accent}
+              />
+            </div>
+          </div>
+
+          <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+            {model.description}
+          </p>
+        </section>
+
+        {/* Характеристики / сравнение версий */}
         {hasMultipleTrims ? (
-          <section className="mx-auto max-w-6xl px-5 pb-20">
+          <section className="mx-auto max-w-4xl px-5 pt-10">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Сравнение версий
             </p>
@@ -197,11 +195,11 @@ export default async function ModelPage({
             </p>
           </section>
         ) : (
-          <section className="mx-auto max-w-6xl px-5 pb-20">
+          <section className="mx-auto max-w-2xl px-5 pt-10">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Характеристики
             </p>
-            <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface-card">
               {[
                 { label: "Тип двигателя", value: entryTrim.powertrainType },
                 { label: "Запас хода", value: `${entryTrim.rangeKm} км` },
@@ -220,7 +218,7 @@ export default async function ModelPage({
               ].map((spec) => (
                 <div
                   key={spec.label}
-                  className="flex items-center justify-between bg-surface-card px-6 py-5"
+                  className="flex items-center justify-between px-6 py-4"
                 >
                   <span className="text-sm text-ink-soft">{spec.label}</span>
                   <span className="font-mono text-sm font-medium text-ink">
@@ -231,6 +229,10 @@ export default async function ModelPage({
             </div>
           </section>
         )}
+
+        <section className="mx-auto max-w-2xl px-5 pb-20 pt-10">
+          <ContactCTA modelName={model.name} />
+        </section>
       </main>
       <Footer />
     </>
