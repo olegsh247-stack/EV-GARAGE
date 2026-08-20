@@ -209,6 +209,40 @@ export const brands: Brand[] = [
       },
     ],
   },
+  {
+    slug: "toyota",
+    name: "Toyota",
+    country: "Китай (СП FAW-Toyota)",
+    accent: "#C81E3A",
+    description:
+      "Электрические модели линейки bZ, которые Toyota выпускает специально для китайского рынка совместно с FAW. В bZ5 используется батарея BYD Blade.",
+    models: [
+      {
+        slug: "toyota-bz5",
+        name: "Toyota bZ5",
+        tagline: "Купе-кроссовер на платформе e-TNGA",
+        priceFrom: 1990000,
+        rangeKm: 550,
+        maxRangeKm: 700,
+        batteryKwh: 65.28,
+        powerHp: 268,
+        accelSec: 7.5,
+        drive: "Передний",
+        seats: 5,
+        bodyType: "Купе-кроссовер",
+        description:
+          "Электрический купе-кроссовер Toyota, выпускаемый совместным предприятием FAW-Toyota. Батарея LFP Blade поставляется BYD, что даёт большой ресурс и повышенную безопасность. Есть версия с батареей 73,98 кВт·ч и запасом хода 630 км.",
+        specs: [
+          { label: "Запас хода", value: "550", unit: "км" },
+          { label: "Батарея", value: "65.28", unit: "кВт·ч" },
+          { label: "Мощность", value: "268", unit: "л.с." },
+          { label: "Разгон 0–100", value: "7.5", unit: "с" },
+          { label: "Привод", value: "Передний" },
+          { label: "Мест", value: "5" },
+        ],
+      },
+    ],
+  },
 ];
 
 export function getBrand(slug: string) {
