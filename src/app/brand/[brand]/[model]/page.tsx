@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ArrowUpRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CarPlaceholder } from "@/components/CarPlaceholder";
 import { ChargeBar } from "@/components/ChargeBar";
 import { ContactCTA } from "@/components/ContactCTA";
-import { brands, getModel, baseTrim, RANGE_SCALE_MAX } from "@/data/cars";
+import {
+  brands,
+  getModel,
+  baseTrim,
+  differingTrimFields,
+  RANGE_SCALE_MAX,
+} from "@/data/cars";
 import { formatPrice } from "@/lib/format";
 
 export function generateStaticParams() {
@@ -26,6 +32,7 @@ export default async function ModelPage({
   const { brand, model } = found;
   const entryTrim = baseTrim(model);
   const hasMultipleTrims = model.trims.length > 1;
+  const compareFields = hasMultipleTrims ? differingTrimFields(model) : [];
 
   return (
     <>
@@ -90,6 +97,32 @@ export default async function ModelPage({
                 {model.description}
               </p>
 
+              {hasMultipleTrims && (
+                <div className="mt-7">
+                  <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                    Выберите версию
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {model.trims.map((trim) => (
+                      <Link
+                        key={trim.slug}
+                        href={`/brand/${brand.slug}/${model.slug}/${trim.slug}`}
+                        className="group flex items-center gap-2 rounded-full border border-line bg-surface-card px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink"
+                      >
+                        {trim.name}
+                        <span className="font-mono text-xs text-ink-soft">
+                          {formatPrice(trim.priceFrom)}
+                        </span>
+                        <ArrowUpRight
+                          size={13}
+                          className="text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-8">
                 <ContactCTA modelName={model.name} />
               </div>
@@ -100,10 +133,10 @@ export default async function ModelPage({
         {hasMultipleTrims ? (
           <section className="mx-auto max-w-6xl px-5 pb-20">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Комплектации · {model.trims.length}
+              Сравнение версий
             </p>
             <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-surface-card">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
+              <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-line text-left">
                     <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
@@ -112,33 +145,29 @@ export default async function ModelPage({
                     <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
                       Цена
                     </th>
-                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                      Запас хода
-                    </th>
-                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                      Батарея
-                    </th>
-                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                      Мощность
-                    </th>
-                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                      Разгон
-                    </th>
-                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                      Привод
-                    </th>
+                    {compareFields.map((field) => (
+                      <th
+                        key={field.key}
+                        className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft"
+                      >
+                        {field.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {model.trims.map((trim) => (
                     <tr
-                      key={trim.name}
-                      className="border-b border-line last:border-0 align-top"
+                      key={trim.slug}
+                      className="border-b border-line align-top last:border-0"
                     >
                       <td className="px-5 py-4">
-                        <p className="font-display font-semibold text-ink">
+                        <Link
+                          href={`/brand/${brand.slug}/${model.slug}/${trim.slug}`}
+                          className="font-display font-semibold text-ink hover:text-charge"
+                        >
                           {trim.name}
-                        </p>
+                        </Link>
                         {trim.highlight && (
                           <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-ink-soft">
                             {trim.highlight}
@@ -148,26 +177,24 @@ export default async function ModelPage({
                       <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
                         {formatPrice(trim.priceFrom)}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
-                        {trim.rangeKm} км
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
-                        {trim.batteryKwh} кВт·ч
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
-                        {trim.powerHp} л.с.
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
-                        {trim.accelSec} с
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
-                        {trim.drive}
-                      </td>
+                      {compareFields.map((field) => (
+                        <td
+                          key={field.key}
+                          className="whitespace-nowrap px-5 py-4 font-mono text-ink"
+                        >
+                          {field.read(trim)}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            <p className="mt-3 text-xs text-ink-soft">
+              Показаны только те характеристики, которые отличаются между
+              версиями. Полные характеристики — на странице конкретной
+              версии.
+            </p>
           </section>
         ) : (
           <section className="mx-auto max-w-6xl px-5 pb-20">
@@ -176,11 +203,19 @@ export default async function ModelPage({
             </p>
             <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
               {[
+                { label: "Тип двигателя", value: entryTrim.powertrainType },
                 { label: "Запас хода", value: `${entryTrim.rangeKm} км` },
-                { label: "Батарея", value: `${entryTrim.batteryKwh} кВт·ч` },
-                { label: "Мощность", value: `${entryTrim.powerHp} л.с.` },
+                {
+                  label: "Мощность",
+                  value: `${entryTrim.powerHp} л.с. (${entryTrim.powerKw} кВт)`,
+                },
+                { label: "Крутящий момент", value: `${entryTrim.torqueNm} Н·м` },
                 { label: "Разгон 0–100", value: `${entryTrim.accelSec} с` },
+                { label: "Макс. скорость", value: `${entryTrim.topSpeedKmh} км/ч` },
                 { label: "Привод", value: entryTrim.drive },
+                { label: "Батарея", value: `${entryTrim.batteryKwh} кВт·ч` },
+                { label: "Тип батареи", value: entryTrim.batteryType },
+                { label: "Быстрая зарядка", value: entryTrim.fastCharge },
                 { label: "Мест", value: String(model.seats) },
               ].map((spec) => (
                 <div
