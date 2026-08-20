@@ -1,10 +1,13 @@
 import Link from "next/link";
 import type { Brand, Model } from "@/data/cars";
+import { baseTrim, RANGE_SCALE_MAX } from "@/data/cars";
 import { CarPlaceholder } from "./CarPlaceholder";
 import { ChargeBar } from "./ChargeBar";
 import { formatPrice } from "@/lib/format";
 
 export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
+  const trim = baseTrim(model);
+
   return (
     <Link
       href={`/brand/${brand.slug}/${model.slug}`}
@@ -20,8 +23,8 @@ export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
         </div>
 
         <ChargeBar
-          valueKm={model.rangeKm}
-          maxKm={model.maxRangeKm}
+          valueKm={trim.rangeKm}
+          maxKm={RANGE_SCALE_MAX}
           accent={brand.accent}
         />
 
@@ -31,8 +34,13 @@ export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
               Цена от
             </p>
             <p className="font-display text-lg font-semibold text-ink">
-              {formatPrice(model.priceFrom)}
+              {formatPrice(trim.priceFrom)}
             </p>
+            {model.trims.length > 1 && (
+              <p className="mt-0.5 font-mono text-[10px] text-ink-soft">
+                {model.trims.length} версии
+              </p>
+            )}
           </div>
           <span className="font-mono text-xs text-charge transition-transform group-hover:translate-x-1">
             Подробнее →

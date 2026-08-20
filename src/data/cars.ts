@@ -1,28 +1,27 @@
 // ЭТО ДЕМО-ДАННЫЕ. Реальные фото, характеристики и цены нужно будет
 // заменить на настоящие через этот файл (или через будущую админку).
-// Формат гибкий — можно добавлять сколько угодно брендов и моделей.
+// Формат гибкий — можно добавлять сколько угодно брендов, моделей и версий.
 
-export type Spec = {
-  label: string;
-  value: string;
-  unit?: string;
+export type Trim = {
+  name: string; // название версии/комплектации
+  priceFrom: number; // цена в рублях (ориентировочно, нужно подтверждать)
+  rangeKm: number;
+  batteryKwh: number;
+  powerHp: number;
+  accelSec: number; // 0-100 км/ч
+  drive: string;
+  highlight?: string; // короткая фраза о ключевом отличии версии
 };
 
 export type Model = {
   slug: string;
   name: string;
   tagline: string;
-  priceFrom: number; // в рублях
-  rangeKm: number; // запас хода, для наглядной шкалы
-  maxRangeKm: number; // для расчёта шкалы (максимум по линейке)
-  batteryKwh: number;
-  powerHp: number;
-  accelSec: number; // 0-100 км/ч
-  drive: string;
-  seats: number;
   bodyType: string;
+  seats: number;
   description: string;
-  specs: Spec[];
+  // версии отсортированы по цене от дешёвой к дорогой
+  trims: Trim[];
 };
 
 export type Brand = {
@@ -33,6 +32,9 @@ export type Brand = {
   accent: string; // hex, акцентный цвет бренда для мелких деталей
   models: Model[];
 };
+
+// Общий максимум для шкалы запаса хода на карточках (просто для наглядности)
+export const RANGE_SCALE_MAX = 700;
 
 export const brands: Brand[] = [
   {
@@ -47,48 +49,40 @@ export const brands: Brand[] = [
         slug: "zeekr-001",
         name: "Zeekr 001",
         tagline: "Лифтбек для дальних поездок",
-        priceFrom: 4590000,
-        rangeKm: 620,
-        maxRangeKm: 700,
-        batteryKwh: 100,
-        powerHp: 544,
-        accelSec: 3.8,
-        drive: "Полный",
-        seats: 5,
         bodyType: "Лифтбек",
+        seats: 5,
         description:
           "Флагманский лифтбек Zeekr с двумя электромоторами и запасом хода, которого хватает на дорогу между городами без дозарядки.",
-        specs: [
-          { label: "Запас хода", value: "620", unit: "км" },
-          { label: "Батарея", value: "100", unit: "кВт·ч" },
-          { label: "Мощность", value: "544", unit: "л.с." },
-          { label: "Разгон 0–100", value: "3.8", unit: "с" },
-          { label: "Привод", value: "Полный" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 4590000,
+            rangeKm: 620,
+            batteryKwh: 100,
+            powerHp: 544,
+            accelSec: 3.8,
+            drive: "Полный",
+          },
         ],
       },
       {
         slug: "zeekr-x",
         name: "Zeekr X",
         tagline: "Компактный кроссовер",
-        priceFrom: 3190000,
-        rangeKm: 440,
-        maxRangeKm: 700,
-        batteryKwh: 66,
-        powerHp: 428,
-        accelSec: 3.7,
-        drive: "Полный",
-        seats: 5,
         bodyType: "Кроссовер",
+        seats: 5,
         description:
           "Городской кроссовер на платформе SEA от Volvo/Geely — компактные размеры при полноценном запасе хода.",
-        specs: [
-          { label: "Запас хода", value: "440", unit: "км" },
-          { label: "Батарея", value: "66", unit: "кВт·ч" },
-          { label: "Мощность", value: "428", unit: "л.с." },
-          { label: "Разгон 0–100", value: "3.7", unit: "с" },
-          { label: "Привод", value: "Полный" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 3190000,
+            rangeKm: 440,
+            batteryKwh: 66,
+            powerHp: 428,
+            accelSec: 3.7,
+            drive: "Полный",
+          },
         ],
       },
     ],
@@ -105,48 +99,40 @@ export const brands: Brand[] = [
         slug: "nio-et5",
         name: "NIO ET5",
         tagline: "Электрический седан бизнес-класса",
-        priceFrom: 4290000,
-        rangeKm: 560,
-        maxRangeKm: 700,
-        batteryKwh: 75,
-        powerHp: 408,
-        accelSec: 4.3,
-        drive: "Полный",
-        seats: 5,
         bodyType: "Седан",
+        seats: 5,
         description:
           "Седан NIO ET5 сочетает спортивную динамику с продуманным салоном и системой автопилота NAD.",
-        specs: [
-          { label: "Запас хода", value: "560", unit: "км" },
-          { label: "Батарея", value: "75", unit: "кВт·ч" },
-          { label: "Мощность", value: "408", unit: "л.с." },
-          { label: "Разгон 0–100", value: "4.3", unit: "с" },
-          { label: "Привод", value: "Полный" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 4290000,
+            rangeKm: 560,
+            batteryKwh: 75,
+            powerHp: 408,
+            accelSec: 4.3,
+            drive: "Полный",
+          },
         ],
       },
       {
         slug: "nio-es6",
         name: "NIO ES6",
         tagline: "Семейный электрокроссовер",
-        priceFrom: 4890000,
-        rangeKm: 500,
-        maxRangeKm: 700,
-        batteryKwh: 75,
-        powerHp: 435,
-        accelSec: 4.5,
-        drive: "Полный",
-        seats: 5,
         bodyType: "Кроссовер",
+        seats: 5,
         description:
           "Просторный кроссовер для семьи с большим багажником и мягкой пневмоподвеской.",
-        specs: [
-          { label: "Запас хода", value: "500", unit: "км" },
-          { label: "Батарея", value: "75", unit: "кВт·ч" },
-          { label: "Мощность", value: "435", unit: "л.с." },
-          { label: "Разгон 0–100", value: "4.5", unit: "с" },
-          { label: "Привод", value: "Полный" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 4890000,
+            rangeKm: 500,
+            batteryKwh: 75,
+            powerHp: 435,
+            accelSec: 4.5,
+            drive: "Полный",
+          },
         ],
       },
     ],
@@ -163,48 +149,40 @@ export const brands: Brand[] = [
         slug: "byd-han",
         name: "BYD Han EV",
         tagline: "Флагманский седан",
-        priceFrom: 3690000,
-        rangeKm: 520,
-        maxRangeKm: 700,
-        batteryKwh: 85.4,
-        powerHp: 517,
-        accelSec: 3.9,
-        drive: "Полный",
-        seats: 5,
         bodyType: "Седан",
+        seats: 5,
         description:
           "Флагман BYD с фирменной батареей Blade — повышенная безопасность при аварии и долгий ресурс.",
-        specs: [
-          { label: "Запас хода", value: "520", unit: "км" },
-          { label: "Батарея", value: "85.4", unit: "кВт·ч" },
-          { label: "Мощность", value: "517", unit: "л.с." },
-          { label: "Разгон 0–100", value: "3.9", unit: "с" },
-          { label: "Привод", value: "Полный" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 3690000,
+            rangeKm: 520,
+            batteryKwh: 85.4,
+            powerHp: 517,
+            accelSec: 3.9,
+            drive: "Полный",
+          },
         ],
       },
       {
         slug: "byd-song-plus",
         name: "BYD Song Plus EV",
         tagline: "Кроссовер на каждый день",
-        priceFrom: 2790000,
-        rangeKm: 450,
-        maxRangeKm: 700,
-        batteryKwh: 71.8,
-        powerHp: 204,
-        accelSec: 8.5,
-        drive: "Передний",
-        seats: 5,
         bodyType: "Кроссовер",
+        seats: 5,
         description:
           "Один из самых популярных электрокроссоверов BYD — баланс цены, запаса хода и практичности.",
-        specs: [
-          { label: "Запас хода", value: "450", unit: "км" },
-          { label: "Батарея", value: "71.8", unit: "кВт·ч" },
-          { label: "Мощность", value: "204", unit: "л.с." },
-          { label: "Разгон 0–100", value: "8.5", unit: "с" },
-          { label: "Привод", value: "Передний" },
-          { label: "Мест", value: "5" },
+        trims: [
+          {
+            name: "Стандарт",
+            priceFrom: 2790000,
+            rangeKm: 450,
+            batteryKwh: 71.8,
+            powerHp: 204,
+            accelSec: 8.5,
+            drive: "Передний",
+          },
         ],
       },
     ],
@@ -221,24 +199,55 @@ export const brands: Brand[] = [
         slug: "toyota-bz5",
         name: "Toyota bZ5",
         tagline: "Купе-кроссовер на платформе e-TNGA",
-        priceFrom: 1990000,
-        rangeKm: 550,
-        maxRangeKm: 700,
-        batteryKwh: 65.28,
-        powerHp: 268,
-        accelSec: 7.5,
-        drive: "Передний",
-        seats: 5,
         bodyType: "Купе-кроссовер",
+        seats: 5,
         description:
-          "Электрический купе-кроссовер Toyota, выпускаемый совместным предприятием FAW-Toyota. Батарея LFP Blade поставляется BYD, что даёт большой ресурс и повышенную безопасность. Есть версия с батареей 73,98 кВт·ч и запасом хода 630 км.",
-        specs: [
-          { label: "Запас хода", value: "550", unit: "км" },
-          { label: "Батарея", value: "65.28", unit: "кВт·ч" },
-          { label: "Мощность", value: "268", unit: "л.с." },
-          { label: "Разгон 0–100", value: "7.5", unit: "с" },
-          { label: "Привод", value: "Передний" },
-          { label: "Мест", value: "5" },
+          "Электрический купе-кроссовер Toyota, выпускаемый совместным предприятием FAW-Toyota. Батарея LFP Blade поставляется BYD, что даёт большой ресурс и повышенную безопасность. Все версии используют один и тот же мотор 200 кВт (268 л.с.), различия — в батарее, оснащении и системах помощи водителю.",
+        // Цены в юанях переведены в рубли ОРИЕНТИРОВОЧНО по грубому курсу,
+        // это китайская розничная цена без учёта доставки/растаможки в РФ.
+        // Обязательно подтвердить реальную цену у поставщика перед публикацией.
+        trims: [
+          {
+            name: "550 Joy",
+            priceFrom: 1750000,
+            rangeKm: 550,
+            batteryKwh: 65.28,
+            powerHp: 268,
+            accelSec: 7.5,
+            drive: "Передний",
+            highlight: "Базовая версия: экран 15,6\", 5G, голосовой ассистент",
+          },
+          {
+            name: "550 Pro",
+            priceFrom: 1890000,
+            rangeKm: 550,
+            batteryKwh: 65.28,
+            powerHp: 268,
+            accelSec: 7.5,
+            drive: "Передний",
+            highlight: "Диски 21\", LED-оптика на всю ширину, панорамная крыша",
+          },
+          {
+            name: "550 Pro Smart Edition",
+            priceFrom: 2160000,
+            rangeKm: 550,
+            batteryKwh: 65.28,
+            powerHp: 268,
+            accelSec: 7.5,
+            drive: "Передний",
+            highlight:
+              "Продвинутый автопилот Toyota Pilot (Momenta 5.0) с лидаром",
+          },
+          {
+            name: "630 Pro",
+            priceFrom: 2160000,
+            rangeKm: 630,
+            batteryKwh: 73.98,
+            powerHp: 268,
+            accelSec: 7.5,
+            drive: "Передний",
+            highlight: "Увеличенный запас хода 630 км, электропривод багажника",
+          },
         ],
       },
     ],
@@ -253,6 +262,11 @@ export function getModel(brandSlug: string, modelSlug: string) {
   const brand = getBrand(brandSlug);
   const model = brand?.models.find((m) => m.slug === modelSlug);
   return brand && model ? { brand, model } : undefined;
+}
+
+// Самая доступная версия модели — используется как "цена от" на карточках
+export function baseTrim(model: Model) {
+  return [...model.trims].sort((a, b) => a.priceFrom - b.priceFrom)[0];
 }
 
 export function allModelsFlat() {

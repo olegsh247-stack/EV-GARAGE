@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CarPlaceholder } from "@/components/CarPlaceholder";
 import { ChargeBar } from "@/components/ChargeBar";
 import { ContactCTA } from "@/components/ContactCTA";
-import { brands, getModel } from "@/data/cars";
+import { brands, getModel, baseTrim, RANGE_SCALE_MAX } from "@/data/cars";
 import { formatPrice } from "@/lib/format";
 
 export function generateStaticParams() {
@@ -24,6 +24,8 @@ export default async function ModelPage({
   const found = getModel(brandSlug, modelSlug);
   if (!found) notFound();
   const { brand, model } = found;
+  const entryTrim = baseTrim(model);
+  const hasMultipleTrims = model.trims.length > 1;
 
   return (
     <>
@@ -65,20 +67,20 @@ export default async function ModelPage({
               <p className="mt-2 text-base text-ink-soft">{model.tagline}</p>
 
               <p className="mt-6 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                Цена от
+                {hasMultipleTrims ? "Цена от" : "Цена"}
               </p>
               <p className="font-display text-3xl font-bold text-ink">
-                {formatPrice(model.priceFrom)}
+                {formatPrice(entryTrim.priceFrom)}
               </p>
 
               <div className="mt-6">
                 <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                  Запас хода
+                  Запас хода {hasMultipleTrims ? "(мин. версия)" : ""}
                 </p>
                 <div className="mt-2">
                   <ChargeBar
-                    valueKm={model.rangeKm}
-                    maxKm={model.maxRangeKm}
+                    valueKm={entryTrim.rangeKm}
+                    maxKm={RANGE_SCALE_MAX}
                     accent={brand.accent}
                   />
                 </div>
@@ -95,25 +97,105 @@ export default async function ModelPage({
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-20">
-          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-            Характеристики
-          </p>
-          <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-            {model.specs.map((spec) => (
-              <div
-                key={spec.label}
-                className="flex items-center justify-between bg-surface-card px-6 py-5"
-              >
-                <span className="text-sm text-ink-soft">{spec.label}</span>
-                <span className="font-mono text-sm font-medium text-ink">
-                  {spec.value}
-                  {spec.unit ? ` ${spec.unit}` : ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+        {hasMultipleTrims ? (
+          <section className="mx-auto max-w-6xl px-5 pb-20">
+            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Комплектации · {model.trims.length}
+            </p>
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-surface-card">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left">
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Версия
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Цена
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Запас хода
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Батарея
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Мощность
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Разгон
+                    </th>
+                    <th className="px-5 py-4 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                      Привод
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {model.trims.map((trim) => (
+                    <tr
+                      key={trim.name}
+                      className="border-b border-line last:border-0 align-top"
+                    >
+                      <td className="px-5 py-4">
+                        <p className="font-display font-semibold text-ink">
+                          {trim.name}
+                        </p>
+                        {trim.highlight && (
+                          <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-ink-soft">
+                            {trim.highlight}
+                          </p>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {formatPrice(trim.priceFrom)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {trim.rangeKm} км
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {trim.batteryKwh} кВт·ч
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {trim.powerHp} л.с.
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {trim.accelSec} с
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-ink">
+                        {trim.drive}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : (
+          <section className="mx-auto max-w-6xl px-5 pb-20">
+            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Характеристики
+            </p>
+            <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { label: "Запас хода", value: `${entryTrim.rangeKm} км` },
+                { label: "Батарея", value: `${entryTrim.batteryKwh} кВт·ч` },
+                { label: "Мощность", value: `${entryTrim.powerHp} л.с.` },
+                { label: "Разгон 0–100", value: `${entryTrim.accelSec} с` },
+                { label: "Привод", value: entryTrim.drive },
+                { label: "Мест", value: String(model.seats) },
+              ].map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex items-center justify-between bg-surface-card px-6 py-5"
+                >
+                  <span className="text-sm text-ink-soft">{spec.label}</span>
+                  <span className="font-mono text-sm font-medium text-ink">
+                    {spec.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </>
