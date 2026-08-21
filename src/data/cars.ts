@@ -874,6 +874,35 @@ export function allModelsFlat() {
   return brands.flatMap((b) => b.models.map((m) => ({ brand: b, model: m })));
 }
 
+// Топ-N моделей по параметру — для блока "Топ по параметрам" на главной.
+// Для каждой модели берём её лучшую версию по этому параметру.
+export function topModelsBy(
+  metric: "range" | "price" | "accel",
+  count = 3
+) {
+  const entries = brands.flatMap((b) =>
+    b.models.map((m) => {
+      let best: Trim;
+      if (metric === "range") {
+        best = [...m.trims].sort((a, b2) => b2.rangeKm - a.rangeKm)[0];
+      } else if (metric === "accel") {
+        best = [...m.trims].sort((a, b2) => a.accelSec - b2.accelSec)[0];
+      } else {
+        best = baseTrim(m);
+      }
+      return { brand: b, model: m, trim: best };
+    })
+  );
+
+  const sorted = [...entries].sort((a, b) => {
+    if (metric === "range") return b.trim.rangeKm - a.trim.rangeKm;
+    if (metric === "accel") return a.trim.accelSec - b.trim.accelSec;
+    return a.trim.priceFrom - b.trim.priceFrom;
+  });
+
+  return sorted.slice(0, count);
+}
+
 // Похожие версии из ДРУГИХ моделей, ближайшие по цене — для блока
 // "Похожие версии" на странице конкретной версии
 export function similarTrims(

@@ -1,8 +1,40 @@
-import { ShieldCheck, Truck, Wrench } from "lucide-react";
+import Link from "next/link";
+import { ClipboardList, MessageCircle, Truck, KeyRound } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BrandCard } from "@/components/BrandCard";
-import { brands } from "@/data/cars";
+import { brands, topModelsBy } from "@/data/cars";
+import { videoReviews } from "@/data/videos";
+import { formatPrice } from "@/lib/format";
+
+const steps = [
+  {
+    icon: ClipboardList,
+    title: "Выбираете модель",
+    text: "Смотрите характеристики и цену прямо на сайте — без звонков и ожидания менеджера.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Оставляете заявку",
+    text: "Пишете в WhatsApp, Telegram или оставляете номер — уточняем наличие и точную цену.",
+  },
+  {
+    icon: Truck,
+    title: "Согласовываем доставку",
+    text: "Обсуждаем сроки, логистику из Китая и оформление документов.",
+  },
+  {
+    icon: KeyRound,
+    title: "Получаете автомобиль",
+    text: "Забираете машину — с гарантией и полным пакетом документов.",
+  },
+];
+
+const topLists = [
+  { title: "Топ по запасу хода", metric: "range" as const, unit: "км", read: (t: { rangeKm: number }) => `${t.rangeKm} км` },
+  { title: "Самые доступные", metric: "price" as const, unit: "₽", read: (t: { priceFrom: number }) => formatPrice(t.priceFrom) },
+  { title: "Быстрее всех разгоняются", metric: "accel" as const, unit: "с", read: (t: { accelSec: number }) => `${t.accelSec} с 0–100` },
+];
 
 export default function Home() {
   return (
@@ -29,46 +61,117 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Trust */}
+        {/* Как это работает */}
         <section id="about" className="mx-auto max-w-[1400px] px-5 py-16">
-          <div className="rounded-2xl border border-line bg-surface-card p-8 sm:p-12">
-            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Почему мы
-            </p>
-            <h2 className="mt-2 max-w-lg font-display text-2xl font-semibold text-ink sm:text-3xl">
-              Разбираемся в электромобилях так же, как вы — в своём деле
-            </h2>
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            Как это работает
+          </p>
+          <h2 className="mt-2 max-w-lg font-display text-2xl font-semibold text-ink sm:text-3xl">
+            От выбора модели до ключей в руках — четыре простых шага
+          </h2>
 
-            <div className="mt-10 grid gap-8 sm:grid-cols-3">
-              <div>
-                <ShieldCheck className="text-charge" size={22} />
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, i) => (
+              <div key={step.title}>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-xs font-bold text-surface">
+                    {i + 1}
+                  </span>
+                  <step.icon className="text-charge" size={20} />
+                </div>
                 <h3 className="mt-3 font-display text-base font-semibold text-ink">
-                  Проверенные данные
+                  {step.title}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                  Характеристики сверяются с официальными источниками
-                  производителя.
+                  {step.text}
                 </p>
               </div>
-              <div>
-                <Truck className="text-charge" size={22} />
-                <h3 className="mt-3 font-display text-base font-semibold text-ink">
-                  Доставка под ключ
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                  Помогаем с логистикой и оформлением на всех этапах.
-                </p>
+            ))}
+          </div>
+        </section>
+
+        {/* Топ по параметрам */}
+        <section className="mx-auto max-w-[1400px] px-5 py-16">
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            Топ по параметрам
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold text-ink sm:text-3xl">
+            Быстрый ориентир по каталогу
+          </h2>
+
+          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+            {topLists.map((list) => {
+              const items = topModelsBy(list.metric, 3);
+              return (
+                <div
+                  key={list.title}
+                  className="rounded-2xl border border-line bg-surface-card p-5"
+                >
+                  <h3 className="font-display text-base font-semibold text-ink">
+                    {list.title}
+                  </h3>
+                  <div className="mt-4 flex flex-col gap-1">
+                    {items.map((item, i) => (
+                      <Link
+                        key={`${item.brand.slug}/${item.model.slug}`}
+                        href={`/brand/${item.brand.slug}/${item.model.slug}${
+                          item.model.trims.length > 1
+                            ? `/${item.trim.slug}`
+                            : ""
+                        }`}
+                        className="group flex items-center justify-between rounded-lg px-2 py-2 transition-colors hover:bg-surface"
+                      >
+                        <span className="flex items-center gap-2 text-sm text-ink">
+                          <span className="font-mono text-xs text-ink-soft">
+                            {i + 1}
+                          </span>
+                          <span className="group-hover:text-charge">
+                            {item.brand.name} {item.model.name}
+                          </span>
+                        </span>
+                        <span className="font-mono text-xs text-ink-soft">
+                          {list.read(item.trim as never)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Видеообзоры */}
+        <section className="mx-auto max-w-[1400px] px-5 py-16">
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            Видеообзоры
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold text-ink sm:text-3xl">
+            Посмотрите модели вживую
+          </h2>
+
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+            {videoReviews.map((v) => (
+              <div key={v.youtubeId}>
+                <div className="aspect-video overflow-hidden rounded-2xl border border-line bg-surface-card">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${v.youtubeId}`}
+                    title={v.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+                <p className="mt-3 text-sm font-medium text-ink">{v.title}</p>
+                <Link
+                  href={`/brand/${v.brandSlug}/${v.modelSlug}`}
+                  className="mt-1 inline-block font-mono text-xs text-charge hover:underline"
+                >
+                  Смотреть в каталоге →
+                </Link>
               </div>
-              <div>
-                <Wrench className="text-charge" size={22} />
-                <h3 className="mt-3 font-display text-base font-semibold text-ink">
-                  Сервисная поддержка
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                  Консультируем по обслуживанию электромобилей в России.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
       </main>
