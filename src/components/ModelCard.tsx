@@ -1,12 +1,20 @@
 import Link from "next/link";
 import type { Brand, Model } from "@/data/cars";
 import { baseTrim, RANGE_SCALE_MAX } from "@/data/cars";
-import { CarPlaceholder } from "./CarPlaceholder";
+import { CarPhoto } from "./CarPhoto";
 import { ChargeBar } from "./ChargeBar";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
 
-export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
+export function ModelCard({
+  brand,
+  model,
+  photoUrl,
+}: {
+  brand: Brand;
+  model: Model;
+  photoUrl?: string;
+}) {
   const trim = baseTrim(model);
 
   return (
@@ -14,7 +22,7 @@ export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
       href={`/brand/${brand.slug}/${model.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface-card transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(19,26,36,0.08)]"
     >
-      <CarPlaceholder accent={brand.accent} className="h-44 w-full" />
+      <CarPhoto photoUrl={photoUrl} accent={brand.accent} className="h-44 w-full" alt={model.name} />
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div>
           <h3 className="font-display text-lg font-semibold text-ink">

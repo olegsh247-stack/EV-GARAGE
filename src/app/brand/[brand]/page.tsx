@@ -5,6 +5,11 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ModelCard } from "@/components/ModelCard";
 import { brands, getBrand } from "@/data/cars";
+import { getPhotoMap, photoKey } from "@/lib/photos";
+
+// Обновляем раз в 30 секунд, чтобы новые фото из админки появлялись
+// без пересборки и ручного деплоя
+export const revalidate = 30;
 
 export function generateStaticParams() {
   return brands.map((b) => ({ brand: b.slug }));
@@ -18,6 +23,7 @@ export default async function BrandPage({
   const { brand: brandSlug } = await params;
   const brand = getBrand(brandSlug);
   if (!brand) notFound();
+  const photoMap = await getPhotoMap();
 
   return (
     <>
@@ -52,7 +58,12 @@ export default async function BrandPage({
         <section className="mx-auto max-w-[1400px] px-5 py-10">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {brand.models.map((model) => (
-              <ModelCard key={model.slug} brand={brand} model={model} />
+              <ModelCard
+                key={model.slug}
+                brand={brand}
+                model={model}
+                photoUrl={photoMap[photoKey(brand.slug, model.slug)]}
+              />
             ))}
           </div>
         </section>

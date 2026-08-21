@@ -1,14 +1,15 @@
 import Link from "next/link";
 import type { Brand, Model, Trim } from "@/data/cars";
 import { fullSpecRows, similarTrims, RANGE_SCALE_MAX } from "@/data/cars";
-import { CarPlaceholder } from "./CarPlaceholder";
+import { CarPhoto } from "./CarPhoto";
 import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
 import { ContactCTA } from "./ContactCTA";
 import { formatPrice } from "@/lib/format";
 import { priceBreakdown } from "@/lib/pricing";
+import { getPhotoMap, photoKey } from "@/lib/photos";
 
-export function TrimDetailView({
+export async function TrimDetailView({
   brand,
   model,
   trim,
@@ -20,6 +21,8 @@ export function TrimDetailView({
   const hasMultipleTrims = model.trims.length > 1;
   const specRows = fullSpecRows(model, trim);
   const price = priceBreakdown(trim.priceFrom);
+  const photoMap = await getPhotoMap();
+  const photoUrl = photoMap[photoKey(brand.slug, model.slug)];
 
   // Ссылка на конкретную версию: самая дешёвая версия живёт на
   // /brand/x/y (без /trim-slug), остальные — на /brand/x/y/trim-slug
@@ -143,19 +146,23 @@ export function TrimDetailView({
           </div>
 
           <div>
-            <CarPlaceholder
+            <CarPhoto
+              photoUrl={photoUrl}
               accent={brand.accent}
               className="h-72 w-full rounded-2xl sm:h-96"
+              alt={model.name}
             />
-            <div className="mt-3 grid grid-cols-4 gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <CarPlaceholder
-                  key={i}
-                  accent={brand.accent}
-                  className="h-16 w-full rounded-lg sm:h-20"
-                />
-              ))}
-            </div>
+            {!photoUrl && (
+              <div className="mt-3 grid grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <CarPhoto
+                    key={i}
+                    accent={brand.accent}
+                    className="h-16 w-full rounded-lg sm:h-20"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -199,7 +206,8 @@ export function TrimDetailView({
                     }`}
                     className="group flex items-center gap-3 rounded-xl border border-line bg-surface-card p-2.5 transition-colors hover:border-ink"
                   >
-                    <CarPlaceholder
+                    <CarPhoto
+                      photoUrl={photoMap[photoKey(s.brand.slug, s.model.slug)]}
                       accent={s.brand.accent}
                       className="h-12 w-16 shrink-0 rounded-lg"
                     />

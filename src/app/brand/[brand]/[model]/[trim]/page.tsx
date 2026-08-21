@@ -4,6 +4,8 @@ import { Footer } from "@/components/Footer";
 import { TrimDetailView } from "@/components/TrimDetailView";
 import { brands, getTrim, baseTrim } from "@/data/cars";
 
+export const revalidate = 30;
+
 export function generateStaticParams() {
   // Самая дешёвая версия живёт по адресу самой модели (без /trim-slug),
   // поэтому для неё отдельную страницу не генерируем.

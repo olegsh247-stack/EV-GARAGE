@@ -1,17 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Scale } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { CarPlaceholder } from "@/components/CarPlaceholder";
+import { CarPhoto } from "@/components/CarPhoto";
 import { useCompare, COMPARE_MAX } from "@/lib/compareContext";
 import { getTrim, fullSpecRows } from "@/data/cars";
+import { photoKey } from "@/lib/photos";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
 
 export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
+  const [photoMap, setPhotoMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch("/api/photos")
+      .then((r) => r.json())
+      .then(setPhotoMap)
+      .catch(() => {});
+  }, []);
 
   const items = ids
     .map((id) => {
@@ -112,9 +122,11 @@ export default function ComparePage() {
                             <X size={14} />
                           </button>
                         </div>
-                        <CarPlaceholder
+                        <CarPhoto
+                          photoUrl={photoMap[photoKey(brand.slug, model.slug)]}
                           accent={brand.accent}
                           className="mt-3 h-24 w-full rounded-lg"
+                          alt={model.name}
                         />
                       </th>
                     ))}

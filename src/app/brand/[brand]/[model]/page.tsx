@@ -4,6 +4,8 @@ import { Footer } from "@/components/Footer";
 import { TrimDetailView } from "@/components/TrimDetailView";
 import { brands, getModel, baseTrim } from "@/data/cars";
 
+export const revalidate = 30;
+
 export function generateStaticParams() {
   return brands.flatMap((b) =>
     b.models.map((m) => ({ brand: b.slug, model: m.slug }))
