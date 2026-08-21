@@ -1,7 +1,7 @@
 import { ShieldCheck, Truck, Wrench } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BrandLogoTile } from "@/components/BrandLogoTile";
+import { BrandCard } from "@/components/BrandCard";
 import { brands } from "@/data/cars";
 
 export default function Home() {
@@ -20,11 +20,11 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {[...brands]
               .sort((a, b) => a.name.localeCompare(b.name, "ru"))
               .map((brand) => (
-                <BrandLogoTile key={brand.slug} brand={brand} />
+                <BrandCard key={brand.slug} brand={brand} />
               ))}
           </div>
         </section>
