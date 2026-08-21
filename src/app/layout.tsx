@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CompareProvider } from "@/lib/compareContext";
 
 export const metadata: Metadata = {
   title: "EV-GARAGE.RU — электромобили из Китая",
@@ -14,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className="h-full antialiased">
-      <body className="flex min-h-full flex-col font-body">{children}</body>
+      <body className="flex min-h-full flex-col font-body">
+        <CompareProvider>{children}</CompareProvider>
+      </body>
     </html>
   );
 }

@@ -3,6 +3,7 @@ import type { Brand, Model, Trim } from "@/data/cars";
 import { fullSpecRows, RANGE_SCALE_MAX } from "@/data/cars";
 import { CarPlaceholder } from "./CarPlaceholder";
 import { ChargeBar } from "./ChargeBar";
+import { AddToCompareButton } from "./AddToCompareButton";
 import { formatPrice } from "@/lib/format";
 
 export function TrimDetailView({
@@ -71,6 +72,12 @@ export function TrimDetailView({
                   accent={brand.accent}
                 />
               </div>
+            </div>
+
+            <div className="mt-6">
+              <AddToCompareButton
+                id={`${brand.slug}/${model.slug}/${trim.slug}`}
+              />
             </div>
 
             {hasMultipleTrims && (
