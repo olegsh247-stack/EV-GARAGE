@@ -11,7 +11,7 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto max-w-6xl px-5 pb-20 pt-16 sm:pt-24">
+        <section className="mx-auto max-w-[1400px] px-5 pb-20 pt-16 sm:pt-24">
           <p className="font-mono text-xs uppercase tracking-widest text-charge">
             Электромобили из Китая · Россия
           </p>
@@ -45,7 +45,7 @@ export default function Home() {
         </section>
 
         {/* Brands */}
-        <section id="brands" className="mx-auto max-w-6xl px-5 py-16">
+        <section id="brands" className="mx-auto max-w-[1400px] px-5 py-16">
           <div className="mb-10 flex items-end justify-between">
             <div>
               <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
@@ -68,7 +68,7 @@ export default function Home() {
         </section>
 
         {/* Trust */}
-        <section id="about" className="mx-auto max-w-6xl px-5 py-16">
+        <section id="about" className="mx-auto max-w-[1400px] px-5 py-16">
           <div className="rounded-2xl border border-line bg-surface-card p-8 sm:p-12">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Почему мы

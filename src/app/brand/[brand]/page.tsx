@@ -23,7 +23,7 @@ export default async function BrandPage({
     <>
       <Header />
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-5 pb-8 pt-10">
+        <section className="mx-auto max-w-[1400px] px-5 pb-8 pt-10">
           <Link
             href="/"
             className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
@@ -49,7 +49,7 @@ export default async function BrandPage({
           </p>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 py-10">
+        <section className="mx-auto max-w-[1400px] px-5 py-10">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {brand.models.map((model) => (
               <ModelCard key={model.slug} brand={brand} model={model} />
