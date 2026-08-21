@@ -20,16 +20,18 @@ export function Footer() {
               Марки
             </p>
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              {brands.map((b) => (
-                <li key={b.slug}>
-                  <Link
-                    href={`/brand/${b.slug}`}
-                    className="text-surface/80 transition-colors hover:text-charge"
-                  >
-                    {b.name}
-                  </Link>
-                </li>
-              ))}
+              {[...brands]
+                .sort((a, b) => a.name.localeCompare(b.name, "ru"))
+                .map((b) => (
+                  <li key={b.slug}>
+                    <Link
+                      href={`/brand/${b.slug}`}
+                      className="text-surface/80 transition-colors hover:text-charge"
+                    >
+                      {b.name}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
 

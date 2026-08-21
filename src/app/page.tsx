@@ -20,10 +20,12 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 lg:grid-cols-6">
-            {brands.map((brand) => (
-              <BrandLogoTile key={brand.slug} brand={brand} />
-            ))}
+          <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6 lg:grid-cols-8">
+            {[...brands]
+              .sort((a, b) => a.name.localeCompare(b.name, "ru"))
+              .map((brand) => (
+                <BrandLogoTile key={brand.slug} brand={brand} />
+              ))}
           </div>
         </section>
 
