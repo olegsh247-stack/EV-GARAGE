@@ -13,17 +13,14 @@ export function BrandLogoTile({ brand }: { brand: Brand }) {
         aria-hidden="true"
       >
         <circle cx="24" cy="24" r="22" fill={brand.accent} />
-        {/* сегментированное кольцо — фирменный приём сайта (та же логика,
-            что у шкалы запаса хода на карточках моделей) */}
         <circle
           cx="24"
           cy="24"
-          r="22"
+          r="21"
           fill="none"
           stroke="white"
-          strokeOpacity="0.85"
-          strokeWidth="2"
-          strokeDasharray="4.2 3.4"
+          strokeOpacity="0.35"
+          strokeWidth="1"
         />
         <text
           x="24"
