@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Brand, Model, Trim } from "@/data/cars";
-import { fullSpecRows, RANGE_SCALE_MAX } from "@/data/cars";
+import { fullSpecRows, similarTrims, RANGE_SCALE_MAX } from "@/data/cars";
 import { CarPlaceholder } from "./CarPlaceholder";
 import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
+import { ContactCTA } from "./ContactCTA";
 import { formatPrice } from "@/lib/format";
 
 export function TrimDetailView({
@@ -130,22 +131,62 @@ export function TrimDetailView({
         </div>
       </section>
 
-      <section className="mx-auto max-w-2xl px-5 pb-20">
-        <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-          Характеристики
-        </p>
-        <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface-card">
-          {specRows.map((spec) => (
-            <div
-              key={spec.label}
-              className="flex items-center justify-between px-6 py-4"
-            >
-              <span className="text-sm text-ink-soft">{spec.label}</span>
-              <span className="font-mono text-sm font-medium text-ink">
-                {spec.value}
-              </span>
+      <section className="mx-auto max-w-[1400px] px-5 pb-24">
+        <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+          {/* Слева — полные характеристики */}
+          <div>
+            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Характеристики
+            </p>
+            <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface-card">
+              {specRows.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex items-center justify-between px-6 py-4"
+                >
+                  <span className="text-sm text-ink-soft">{spec.label}</span>
+                  <span className="font-mono text-sm font-medium text-ink">
+                    {spec.value}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Справа — CTA (прилипает при скролле) и похожие версии */}
+          <div className="lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-6">
+            <ContactCTA modelName={`${model.name}${hasMultipleTrims ? ` ${trim.name}` : ""}`} />
+
+            <div className="mt-6 lg:mt-0">
+              <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+                Похожие версии
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                {similarTrims(model.slug, trim.priceFrom).map((s) => (
+                  <Link
+                    key={`${s.brand.slug}/${s.model.slug}/${s.trim.slug}`}
+                    href={`/brand/${s.brand.slug}/${s.model.slug}${
+                      s.model.trims.length > 1 ? `/${s.trim.slug}` : ""
+                    }`}
+                    className="group flex items-center gap-3 rounded-xl border border-line bg-surface-card p-2.5 transition-colors hover:border-ink"
+                  >
+                    <CarPlaceholder
+                      accent={s.brand.accent}
+                      className="h-12 w-16 shrink-0 rounded-lg"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink group-hover:text-charge">
+                        {s.brand.name} {s.model.name}
+                      </p>
+                      <p className="font-mono text-xs text-ink-soft">
+                        {formatPrice(s.trim.priceFrom)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </>

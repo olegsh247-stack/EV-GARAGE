@@ -873,3 +873,24 @@ export function baseTrim(model: Model) {
 export function allModelsFlat() {
   return brands.flatMap((b) => b.models.map((m) => ({ brand: b, model: m })));
 }
+
+// Похожие версии из ДРУГИХ моделей, ближайшие по цене — для блока
+// "Похожие версии" на странице конкретной версии
+export function similarTrims(
+  excludeModelSlug: string,
+  priceFrom: number,
+  count = 3
+) {
+  const all = brands.flatMap((b) =>
+    b.models
+      .filter((m) => m.slug !== excludeModelSlug)
+      .flatMap((m) => m.trims.map((t) => ({ brand: b, model: m, trim: t })))
+  );
+  return all
+    .sort(
+      (a, b) =>
+        Math.abs(a.trim.priceFrom - priceFrom) -
+        Math.abs(b.trim.priceFrom - priceFrom)
+    )
+    .slice(0, count);
+}
