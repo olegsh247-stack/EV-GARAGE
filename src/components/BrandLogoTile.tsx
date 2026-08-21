@@ -24,11 +24,11 @@ export function BrandLogoTile({ brand }: { brand: Brand }) {
         />
         <text
           x="24"
-          y="24"
+          y="25"
+          dy="0.35em"
           textAnchor="middle"
-          dominantBaseline="central"
           fill="white"
-          fontFamily="var(--font-display)"
+          fontFamily="Space Grotesk, sans-serif"
           fontWeight="700"
           fontSize={brand.logo.length > 2 ? 12 : 15}
         >
