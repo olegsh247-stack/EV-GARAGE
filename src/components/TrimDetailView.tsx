@@ -92,20 +92,20 @@ export function TrimDetailView({
                 {formatPrice(price.total)}
               </p>
 
-              <div className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface-card">
-                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <div className="mt-3 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-ink-soft">1. В Китае</span>
                   <span className="font-mono text-ink">
                     {formatPrice(price.chinaPrice)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-ink-soft">2. Таможня</span>
                   <span className="font-mono text-ink">
                     {formatPrice(price.customs)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-ink-soft">3. Логистика</span>
                   <span className="font-mono text-ink">
                     {formatPrice(price.logistics)}
