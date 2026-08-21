@@ -1,8 +1,7 @@
-import Link from "next/link";
-import { ArrowDown, ShieldCheck, Truck, Wrench } from "lucide-react";
+import { ShieldCheck, Truck, Wrench } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BrandCard } from "@/components/BrandCard";
+import { BrandLogoTile } from "@/components/BrandLogoTile";
 import { brands } from "@/data/cars";
 
 export default function Home() {
@@ -10,59 +9,20 @@ export default function Home() {
     <>
       <Header />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="mx-auto max-w-[1400px] px-5 pb-20 pt-16 sm:pt-24">
-          <p className="font-mono text-xs uppercase tracking-widest text-charge">
-            Электромобили из Китая · Россия
-          </p>
-          <h1 className="mt-5 max-w-3xl font-display text-4xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl">
-            Выбирайте модель
-            <br />
-            по запасу хода,
-            <br />
-            <span className="text-charge">а не по слухам.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
-            Характеристики, реальные цены и прямая связь с продавцом — без
-            посредников и без воды. Только электромобили, только Китай.
-          </p>
-
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <a
-              href="#brands"
-              className="flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-medium text-surface transition-colors hover:bg-deep"
-            >
-              Смотреть марки
-              <ArrowDown size={16} />
-            </a>
-            <Link
-              href="#about"
-              className="text-sm font-medium text-ink-soft underline decoration-line underline-offset-4 transition-colors hover:text-ink"
-            >
-              Почему мы
-            </Link>
-          </div>
-        </section>
-
-        {/* Brands */}
-        <section id="brands" className="mx-auto max-w-[1400px] px-5 py-16">
-          <div className="mb-10 flex items-end justify-between">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-                Каталог
-              </p>
-              <h2 className="mt-2 font-display text-2xl font-semibold text-ink sm:text-3xl">
-                Выберите марку
-              </h2>
-            </div>
+        {/* Brands — сразу с главной, без вступительного блока */}
+        <section id="brands" className="mx-auto max-w-[1400px] px-5 pb-16 pt-10">
+          <div className="mb-8 flex items-end justify-between">
+            <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+              Выберите марку
+            </h1>
             <span className="hidden font-mono text-sm text-ink-soft sm:block">
-              {brands.length} {brands.length === 1 ? "бренд" : "бренда"}
+              {brands.length} брендов
             </span>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 lg:grid-cols-6">
             {brands.map((brand) => (
-              <BrandCard key={brand.slug} brand={brand} />
+              <BrandLogoTile key={brand.slug} brand={brand} />
             ))}
           </div>
         </section>

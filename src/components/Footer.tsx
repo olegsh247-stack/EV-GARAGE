@@ -19,7 +19,7 @@ export function Footer() {
             <p className="font-mono text-xs uppercase tracking-wide text-surface/40">
               Марки
             </p>
-            <ul className="mt-4 space-y-2 text-sm">
+            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {brands.map((b) => (
                 <li key={b.slug}>
                   <Link
