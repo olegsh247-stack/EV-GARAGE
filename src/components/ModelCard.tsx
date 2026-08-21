@@ -4,6 +4,7 @@ import { baseTrim, RANGE_SCALE_MAX } from "@/data/cars";
 import { CarPlaceholder } from "./CarPlaceholder";
 import { ChargeBar } from "./ChargeBar";
 import { formatPrice } from "@/lib/format";
+import { totalPrice } from "@/lib/pricing";
 
 export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
   const trim = baseTrim(model);
@@ -34,7 +35,7 @@ export function ModelCard({ brand, model }: { brand: Brand; model: Model }) {
               Цена от
             </p>
             <p className="font-display text-lg font-semibold text-ink">
-              {formatPrice(trim.priceFrom)}
+              {formatPrice(totalPrice(trim.priceFrom))}
             </p>
             {model.trims.length > 1 && (
               <p className="mt-0.5 font-mono text-[10px] text-ink-soft">

@@ -6,6 +6,7 @@ import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
 import { ContactCTA } from "./ContactCTA";
 import { formatPrice } from "@/lib/format";
+import { priceBreakdown } from "@/lib/pricing";
 
 export function TrimDetailView({
   brand,
@@ -18,6 +19,7 @@ export function TrimDetailView({
 }) {
   const hasMultipleTrims = model.trims.length > 1;
   const specRows = fullSpecRows(model, trim);
+  const price = priceBreakdown(trim.priceFrom);
 
   // Ссылка на конкретную версию: самая дешёвая версия живёт на
   // /brand/x/y (без /trim-slug), остальные — на /brand/x/y/trim-slug
@@ -55,34 +57,8 @@ export function TrimDetailView({
               {trim.highlight ?? model.tagline}
             </p>
 
-            <p className="mt-6 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-              Цена
-            </p>
-            <p className="font-display text-3xl font-bold text-ink">
-              {formatPrice(trim.priceFrom)}
-            </p>
-
-            <div className="mt-6">
-              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                Запас хода
-              </p>
-              <div className="mt-2">
-                <ChargeBar
-                  valueKm={trim.rangeKm}
-                  maxKm={RANGE_SCALE_MAX}
-                  accent={brand.accent}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <AddToCompareButton
-                id={`${brand.slug}/${model.slug}/${trim.slug}`}
-              />
-            </div>
-
             {hasMultipleTrims && (
-              <div className="mt-7">
+              <div className="mt-6">
                 <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
                   Версия
                 </p>
@@ -107,6 +83,59 @@ export function TrimDetailView({
                 </div>
               </div>
             )}
+
+            <div className="mt-6">
+              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                Цена итого
+              </p>
+              <p className="font-display text-3xl font-bold text-ink">
+                {formatPrice(price.total)}
+              </p>
+
+              <div className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface-card">
+                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <span className="text-ink-soft">1. В Китае</span>
+                  <span className="font-mono text-ink">
+                    {formatPrice(price.chinaPrice)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <span className="text-ink-soft">2. Таможня</span>
+                  <span className="font-mono text-ink">
+                    {formatPrice(price.customs)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <span className="text-ink-soft">3. Логистика</span>
+                  <span className="font-mono text-ink">
+                    {formatPrice(price.logistics)}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-ink-soft">
+                Таможня — расчёт появится позже. Логистика — 15% от цены в
+                Китае, но не менее 300 000 ₽.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                Запас хода
+              </p>
+              <div className="mt-2">
+                <ChargeBar
+                  valueKm={trim.rangeKm}
+                  maxKm={RANGE_SCALE_MAX}
+                  accent={brand.accent}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <AddToCompareButton
+                id={`${brand.slug}/${model.slug}/${trim.slug}`}
+              />
+            </div>
 
             <p className="mt-6 text-sm leading-relaxed text-ink-soft">
               {model.description}
@@ -179,7 +208,7 @@ export function TrimDetailView({
                         {s.brand.name} {s.model.name}
                       </p>
                       <p className="font-mono text-xs text-ink-soft">
-                        {formatPrice(s.trim.priceFrom)}
+                        {formatPrice(priceBreakdown(s.trim.priceFrom).total)}
                       </p>
                     </div>
                   </Link>

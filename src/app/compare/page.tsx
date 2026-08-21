@@ -8,6 +8,7 @@ import { CarPlaceholder } from "@/components/CarPlaceholder";
 import { useCompare, COMPARE_MAX } from "@/lib/compareContext";
 import { getTrim, fullSpecRows } from "@/data/cars";
 import { formatPrice } from "@/lib/format";
+import { totalPrice } from "@/lib/pricing";
 
 export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
@@ -99,7 +100,7 @@ export default function ComparePage() {
                               {model.trims.length > 1 ? ` ${trim.name}` : ""}
                             </Link>
                             <p className="mt-0.5 font-mono text-xs text-ink-soft">
-                              {formatPrice(trim.priceFrom)}
+                              {formatPrice(totalPrice(trim.priceFrom))}
                             </p>
                           </div>
                           <button

@@ -6,6 +6,7 @@ import { BrandCard } from "@/components/BrandCard";
 import { brands, topModelsBy } from "@/data/cars";
 import { videoReviews } from "@/data/videos";
 import { formatPrice } from "@/lib/format";
+import { totalPrice } from "@/lib/pricing";
 
 const steps = [
   {
@@ -32,7 +33,7 @@ const steps = [
 
 const topLists = [
   { title: "Топ по запасу хода", metric: "range" as const, unit: "км", read: (t: { rangeKm: number }) => `${t.rangeKm} км` },
-  { title: "Самые доступные", metric: "price" as const, unit: "₽", read: (t: { priceFrom: number }) => formatPrice(t.priceFrom) },
+  { title: "Самые доступные", metric: "price" as const, unit: "₽", read: (t: { priceFrom: number }) => formatPrice(totalPrice(t.priceFrom)) },
   { title: "Быстрее всех разгоняются", metric: "accel" as const, unit: "с", read: (t: { accelSec: number }) => `${t.accelSec} с 0–100` },
 ];
 
