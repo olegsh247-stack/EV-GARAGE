@@ -48,24 +48,30 @@ export type Brand = {
 // Общий максимум для шкалы запаса хода на карточках (просто для наглядности)
 export const RANGE_SCALE_MAX = 700;
 
-// Поля сравнительной таблицы версий — label + функция чтения значения.
-// Порядок здесь и определяет порядок колонок/строк характеристик.
-export const TRIM_FIELDS: {
-  key: string;
-  label: string;
-  read: (t: Trim) => string;
-}[] = [
-  { key: "powertrainType", label: "Тип двигателя", read: (t) => t.powertrainType },
-  { key: "rangeKm", label: "Запас хода", read: (t) => `${t.rangeKm} км` },
-  { key: "powerHp", label: "Мощность", read: (t) => `${t.powerHp} л.с. (${t.powerKw} кВт)` },
-  { key: "torqueNm", label: "Крутящий момент", read: (t) => `${t.torqueNm} Н·м` },
-  { key: "accelSec", label: "Разгон 0–100", read: (t) => `${t.accelSec} с` },
-  { key: "topSpeedKmh", label: "Максимальная скорость", read: (t) => `${t.topSpeedKmh} км/ч` },
-  { key: "drive", label: "Привод", read: (t) => t.drive },
-  { key: "batteryKwh", label: "Батарея", read: (t) => `${t.batteryKwh} кВт·ч` },
-  { key: "batteryType", label: "Тип батареи", read: (t) => t.batteryType },
-  { key: "fastCharge", label: "Быстрая зарядка", read: (t) => t.fastCharge },
-];
+// Единый порядок из 11 базовых характеристик — как в договорённости и на
+// китайских каталогах (autohome.com.cn/config/spec/...). "Тип кузова" и
+// "Мест" берутся с уровня модели, остальное — с уровня конкретной версии.
+export function fullSpecRows(model: Model, trim: Trim) {
+  return [
+    { label: "Тип кузова", value: model.bodyType },
+    { label: "Тип двигателя", value: trim.powertrainType },
+    { label: "Запас хода (CLTC)", value: `${trim.rangeKm} км` },
+    {
+      label: "Мощность",
+      value: `${trim.powerHp} л.с. (${trim.powerKw} кВт)`,
+    },
+    { label: "Крутящий момент", value: `${trim.torqueNm} Н·м` },
+    { label: "Разгон 0–100", value: `${trim.accelSec} с` },
+    { label: "Привод", value: trim.drive },
+    {
+      label: "Батарея",
+      value: `${trim.batteryKwh} кВт·ч (${trim.batteryType})`,
+    },
+    { label: "Быстрая зарядка", value: trim.fastCharge },
+    { label: "Максимальная скорость", value: `${trim.topSpeedKmh} км/ч` },
+    { label: "Мест", value: String(model.seats) },
+  ];
+}
 
 export const brands: Brand[] = [
   {
@@ -374,15 +380,6 @@ export function getTrim(brandSlug: string, modelSlug: string, trimSlug: string) 
 // Самая доступная версия модели — используется как "цена от" на карточках
 export function baseTrim(model: Model) {
   return [...model.trims].sort((a, b) => a.priceFrom - b.priceFrom)[0];
-}
-
-// Какие поля сравнительной таблицы реально отличаются между версиями —
-// чтобы не показывать одинаковые строки/колонки по 4 раза подряд.
-export function differingTrimFields(model: Model) {
-  return TRIM_FIELDS.filter((field) => {
-    const values = new Set(model.trims.map((t) => field.read(t)));
-    return values.size > 1;
-  });
 }
 
 export function allModelsFlat() {

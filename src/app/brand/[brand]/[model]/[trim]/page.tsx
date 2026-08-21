@@ -5,8 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CarPlaceholder } from "@/components/CarPlaceholder";
 import { ChargeBar } from "@/components/ChargeBar";
-import { ContactCTA } from "@/components/ContactCTA";
-import { brands, getTrim, RANGE_SCALE_MAX } from "@/data/cars";
+import { brands, getTrim, fullSpecRows, RANGE_SCALE_MAX } from "@/data/cars";
 import { formatPrice } from "@/lib/format";
 
 export function generateStaticParams() {
@@ -28,20 +27,7 @@ export default async function TrimPage({
   const found = getTrim(brandSlug, modelSlug, trimSlug);
   if (!found) notFound();
   const { brand, model, trim } = found;
-
-  const specRows = [
-    { label: "Тип двигателя", value: trim.powertrainType },
-    { label: "Запас хода", value: `${trim.rangeKm} км` },
-    { label: "Мощность", value: `${trim.powerHp} л.с. (${trim.powerKw} кВт)` },
-    { label: "Крутящий момент", value: `${trim.torqueNm} Н·м` },
-    { label: "Разгон 0–100", value: `${trim.accelSec} с` },
-    { label: "Макс. скорость", value: `${trim.topSpeedKmh} км/ч` },
-    { label: "Привод", value: trim.drive },
-    { label: "Батарея", value: `${trim.batteryKwh} кВт·ч` },
-    { label: "Тип батареи", value: trim.batteryType },
-    { label: "Быстрая зарядка", value: trim.fastCharge },
-    { label: "Мест", value: String(model.seats) },
-  ];
+  const specRows = fullSpecRows(model, trim);
 
   return (
     <>
@@ -119,10 +105,6 @@ export default async function TrimPage({
                   </div>
                 </div>
               )}
-
-              <div className="mt-8">
-                <ContactCTA modelName={`${model.name} ${trim.name}`} />
-              </div>
             </div>
 
             <div>
@@ -146,7 +128,7 @@ export default async function TrimPage({
         {/* Полные характеристики — список в одну колонку */}
         <section className="mx-auto max-w-2xl px-5 pb-20">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-            Полные характеристики
+            Характеристики
           </p>
           <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface-card">
             {specRows.map((spec) => (
