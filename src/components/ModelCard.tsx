@@ -31,11 +31,7 @@ export function ModelCard({
           <p className="text-sm text-ink-soft">{model.tagline}</p>
         </div>
 
-        <ChargeBar
-          valueKm={trim.rangeKm}
-          maxKm={RANGE_SCALE_MAX}
-          accent={brand.accent}
-        />
+        <ChargeBar valueKm={trim.rangeKm} maxKm={RANGE_SCALE_MAX} />
 
         <div className="mt-auto flex items-end justify-between border-t border-line pt-4">
           <div>

@@ -136,11 +136,7 @@ export async function TrimDetailView({
               Запас хода
             </p>
             <div className="mt-2">
-              <ChargeBar
-                valueKm={trim.rangeKm}
-                maxKm={RANGE_SCALE_MAX}
-                accent={brand.accent}
-              />
+              <ChargeBar valueKm={trim.rangeKm} maxKm={RANGE_SCALE_MAX} />
             </div>
           </div>
 

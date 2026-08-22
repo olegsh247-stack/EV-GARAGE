@@ -3,11 +3,9 @@ const SEGMENTS = 12;
 export function ChargeBar({
   valueKm,
   maxKm,
-  accent = "var(--charge)",
 }: {
   valueKm: number;
   maxKm: number;
-  accent?: string;
 }) {
   const filled = Math.max(
     1,
@@ -22,7 +20,7 @@ export function ChargeBar({
             key={i}
             className="h-4 w-1.5 rounded-[1px]"
             style={{
-              background: i < filled ? accent : "var(--line)",
+              background: i < filled ? "var(--charge)" : "var(--line)",
             }}
           />
         ))}
