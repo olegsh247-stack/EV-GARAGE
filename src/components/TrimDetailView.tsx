@@ -5,6 +5,7 @@ import { CarPhoto } from "./CarPhoto";
 import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
 import { ContactCTA } from "./ContactCTA";
+import { ColorSwatches } from "./ColorSwatches";
 import { formatPrice } from "@/lib/format";
 import { priceBreakdown } from "@/lib/pricing";
 import { getPhotoMap, photoKey } from "@/lib/photos";
@@ -182,6 +183,20 @@ export async function TrimDetailView({
                   className="h-16 w-full rounded-lg sm:h-20"
                 />
               ))}
+            </div>
+          )}
+
+          {(model.exteriorColors || model.interiorColors) && (
+            <div className="mt-6 grid grid-cols-2 gap-6">
+              {model.exteriorColors && (
+                <ColorSwatches title="Цвета" colors={model.exteriorColors} />
+              )}
+              {model.interiorColors && (
+                <ColorSwatches
+                  title="Интерьер"
+                  colors={model.interiorColors}
+                />
+              )}
             </div>
           )}
 
