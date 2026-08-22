@@ -35,142 +35,118 @@ export async function TrimDetailView({
       : `/brand/${brand.slug}/${model.slug}/${t.slug}`;
 
   return (
-    <>
-      <section className="mx-auto max-w-[1400px] px-5 pb-8 pt-10">
-        <Link
-          href={`/brand/${brand.slug}`}
-          className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
-        >
-          {brand.name}
-        </Link>
+    <section className="mx-auto max-w-[1400px] px-5 pb-24 pt-10">
+      <Link
+        href={`/brand/${brand.slug}`}
+        className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
+      >
+        {brand.name}
+      </Link>
 
-        {/* Текст слева, фото справа — блоки одного размера */}
-        <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              {brand.name} · {model.bodyType}
-            </p>
-            <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              {model.name}
-              {hasMultipleTrims && (
-                <span className="text-ink-soft"> · {trim.name}</span>
-              )}
-            </h1>
-            <p className="mt-2 text-base text-ink-soft">
-              {trim.highlight ?? model.tagline}
-            </p>
-
+      {/* Единая сетка на всю страницу: левая колонка — весь текст сверху
+          вниз (включая характеристики), правая — фото сверху, CTA и
+          похожие версии снизу. Так оба столбца всегда совпадают по ширине. */}
+      <div className="mt-8 grid gap-10 lg:grid-cols-2">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            {brand.name} · {model.bodyType}
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            {model.name}
             {hasMultipleTrims && (
-              <div className="mt-6">
-                <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                  Версия
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {model.trims.map((t) => {
-                    const active = t.slug === trim.slug;
-                    return (
-                      <Link
-                        key={t.slug}
-                        href={trimHref(t)}
-                        aria-current={active ? "page" : undefined}
-                        className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                          active
-                            ? "border-ink bg-ink text-surface"
-                            : "border-line bg-surface-card text-ink hover:border-ink"
-                        }`}
-                      >
-                        {t.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
+              <span className="text-ink-soft"> · {trim.name}</span>
             )}
+          </h1>
+          <p className="mt-2 text-base text-ink-soft">
+            {trim.highlight ?? model.tagline}
+          </p>
 
+          {hasMultipleTrims && (
             <div className="mt-6">
-              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                Цена итого
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                Версия
               </p>
-              <p className="font-display text-3xl font-bold text-ink">
-                {formatPrice(price.total)}
-              </p>
-
-              <div className="mt-3 flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-ink-soft">1. В Китае</span>
-                  <span className="font-mono text-ink">
-                    {formatPrice(price.chinaPrice)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-ink-soft">2. Таможня</span>
-                  <span className="font-mono text-ink">
-                    {formatPrice(price.customs)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-ink-soft">3. Логистика</span>
-                  <span className="font-mono text-ink">
-                    {formatPrice(price.logistics)}
-                  </span>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-ink-soft">
-                Таможня — расчёт появится позже. Логистика — 15% от цены в
-                Китае, но не менее 300 000 ₽.
-              </p>
-            </div>
-
-            <div className="mt-6">
-              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                Запас хода
-              </p>
-              <div className="mt-2">
-                <ChargeBar
-                  valueKm={trim.rangeKm}
-                  maxKm={RANGE_SCALE_MAX}
-                  accent={brand.accent}
-                />
+              <div className="flex flex-wrap gap-2">
+                {model.trims.map((t) => {
+                  const active = t.slug === trim.slug;
+                  return (
+                    <Link
+                      key={t.slug}
+                      href={trimHref(t)}
+                      aria-current={active ? "page" : undefined}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                        active
+                          ? "border-ink bg-ink text-surface"
+                          : "border-line bg-surface-card text-ink hover:border-ink"
+                      }`}
+                    >
+                      {t.name}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
+          )}
 
-            <div className="mt-6">
-              <AddToCompareButton
-                id={`${brand.slug}/${model.slug}/${trim.slug}`}
+          <div className="mt-6">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+              Цена итого
+            </p>
+            <p className="font-display text-3xl font-bold text-ink">
+              {formatPrice(price.total)}
+            </p>
+
+            <div className="mt-3 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-soft">1. В Китае</span>
+                <span className="font-mono text-ink">
+                  {formatPrice(price.chinaPrice)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-soft">2. Таможня</span>
+                <span className="font-mono text-ink">
+                  {formatPrice(price.customs)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-soft">3. Логистика</span>
+                <span className="font-mono text-ink">
+                  {formatPrice(price.logistics)}
+                </span>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-ink-soft">
+              Таможня — расчёт появится позже. Логистика — 15% от цены в
+              Китае, но не менее 300 000 ₽.
+            </p>
+          </div>
+
+          <div className="mt-6">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+              Запас хода
+            </p>
+            <div className="mt-2">
+              <ChargeBar
+                valueKm={trim.rangeKm}
+                maxKm={RANGE_SCALE_MAX}
+                accent={brand.accent}
               />
             </div>
-
-            <p className="mt-6 text-sm leading-relaxed text-ink-soft">
-              {model.description}
-            </p>
           </div>
 
-          <div>
-            <CarPhoto
-              photoUrl={photoUrl}
-              accent={brand.accent}
-              className="h-72 w-full rounded-2xl sm:h-96"
-              alt={model.name}
+          <div className="mt-6">
+            <AddToCompareButton
+              id={`${brand.slug}/${model.slug}/${trim.slug}`}
             />
-            {!photoUrl && (
-              <div className="mt-3 grid grid-cols-4 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <CarPhoto
-                    key={i}
-                    accent={brand.accent}
-                    className="h-16 w-full rounded-lg sm:h-20"
-                  />
-                ))}
-              </div>
-            )}
           </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-[1400px] px-5 pb-24">
-        <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
-          {/* Слева — полные характеристики */}
-          <div>
+          <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+            {model.description}
+          </p>
+
+          {/* Характеристики — в той же колонке, той же ширины */}
+          <div className="mt-10">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Характеристики
             </p>
@@ -188,12 +164,34 @@ export async function TrimDetailView({
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Справа — CTA (прилипает при скролле) и похожие версии */}
-          <div className="lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-6">
-            <ContactCTA modelName={`${model.name}${hasMultipleTrims ? ` ${trim.name}` : ""}`} />
+        <div>
+          <CarPhoto
+            photoUrl={photoUrl}
+            accent={brand.accent}
+            className="h-72 w-full rounded-2xl sm:h-96"
+            alt={model.name}
+          />
+          {!photoUrl && (
+            <div className="mt-3 grid grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <CarPhoto
+                  key={i}
+                  accent={brand.accent}
+                  className="h-16 w-full rounded-lg sm:h-20"
+                />
+              ))}
+            </div>
+          )}
 
-            <div className="mt-6 lg:mt-0">
+          {/* CTA и похожие версии — в той же колонке, что и фото, прилипает при скролле */}
+          <div className="mt-6 lg:sticky lg:top-24">
+            <ContactCTA
+              modelName={`${model.name}${hasMultipleTrims ? ` ${trim.name}` : ""}`}
+            />
+
+            <div className="mt-6">
               <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
                 Похожие версии
               </p>
@@ -225,7 +223,7 @@ export async function TrimDetailView({
             </div>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
