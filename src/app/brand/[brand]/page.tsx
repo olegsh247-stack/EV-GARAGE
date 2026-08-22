@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ModelCard } from "@/components/ModelCard";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { brands, getBrand } from "@/data/cars";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 
@@ -30,13 +29,12 @@ export default async function BrandPage({
       <Header />
       <main className="flex-1">
         <section className="mx-auto max-w-[1400px] px-5 pb-8 pt-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
-          >
-            <ChevronLeft size={14} />
-            Все марки
-          </Link>
+          <Breadcrumbs
+            items={[
+              { label: "Все марки", href: "/" },
+              { label: brand.name },
+            ]}
+          />
 
           <div className="mt-6 flex items-center gap-4">
             <span

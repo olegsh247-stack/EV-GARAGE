@@ -6,6 +6,7 @@ import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
 import { ContactCTA } from "./ContactCTA";
 import { ColorSwatches } from "./ColorSwatches";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { formatPrice } from "@/lib/format";
 import { priceBreakdown } from "@/lib/pricing";
 import { getPhotoMap, photoKey } from "@/lib/photos";
@@ -37,12 +38,19 @@ export async function TrimDetailView({
 
   return (
     <section className="mx-auto max-w-[1400px] px-5 pb-24 pt-10">
-      <Link
-        href={`/brand/${brand.slug}`}
-        className="inline-flex items-center gap-1 font-mono text-xs text-ink-soft transition-colors hover:text-ink"
-      >
-        {brand.name}
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Все марки", href: "/" },
+          { label: brand.name, href: `/brand/${brand.slug}` },
+          {
+            label: model.name,
+            href: hasMultipleTrims
+              ? `/brand/${brand.slug}/${model.slug}`
+              : undefined,
+          },
+          ...(hasMultipleTrims ? [{ label: trim.name }] : []),
+        ]}
+      />
 
       {/* Единая сетка на всю страницу: левая колонка — весь текст сверху
           вниз (включая характеристики), правая — фото сверху, CTA и
