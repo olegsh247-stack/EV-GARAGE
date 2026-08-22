@@ -101,6 +101,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Флагманский лифтбек Zeekr с двумя электромоторами и запасом хода, которого хватает на дорогу между городами без дозарядки.",
+        exteriorColors: [
+          { name: "Полярный белый", hex: "#F2F2F0" },
+          { name: "Лазерный серый", hex: "#8C9096" },
+          { name: "Угольно-чёрный", hex: "#16171A" },
+          { name: "Электрический синий", hex: "#1E5FBF" },
+        ],
+        interiorColors: [
+          { name: "Чёрно-серый", hex: "#3A3A3C" },
+          { name: "Чёрно-зелёный", hex: "#2E3B32" },
+          { name: "Сине-белый", hex: "#D8DEE6" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -128,6 +139,16 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Городской кроссовер на платформе SEA от Volvo/Geely — компактные размеры при полноценном запасе хода.",
+        exteriorColors: [
+          { name: "Хрустально-белый", hex: "#F1F1EC" },
+          { name: "Сосново-зелёный", hex: "#3E4A3D" },
+          { name: "Дворцовый бежевый", hex: "#D8CBB8" },
+          { name: "Туманно-серый", hex: "#9B9C9E" },
+        ],
+        interiorColors: [
+          { name: "Чёрный с красной прострочкой", hex: "#1A1A1C" },
+          { name: "Чёрно-белый двухцветный", hex: "#E7E7E3" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -166,6 +187,18 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Седан NIO ET5 сочетает спортивную динамику с продуманным салоном и системой автопилота NAD.",
+        exteriorColors: [
+          { name: "Облачно-белый", hex: "#F0F1EE" },
+          { name: "Звёздно-серый", hex: "#8A8D91" },
+          { name: "Глубокий чёрный", hex: "#17181B" },
+          { name: "Марсианский красный", hex: "#A6362E" },
+          { name: "Небесно-синий", hex: "#3E6FA8" },
+        ],
+        interiorColors: [
+          { name: "Ониксовый чёрный", hex: "#232323" },
+          { name: "Терракотовый", hex: "#B4562F" },
+          { name: "Каменно-серый", hex: "#8D8A82" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -193,6 +226,19 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Просторный кроссовер для семьи с большим багажником и мягкой пневмоподвеской.",
+        exteriorColors: [
+          { name: "Облачно-белый", hex: "#F0F1EE" },
+          { name: "Глубокий чёрный", hex: "#17181B" },
+          { name: "Звёздно-серый", hex: "#8A8D91" },
+          { name: "Марсианский красный", hex: "#A6362E" },
+          { name: "Арктический зелёный", hex: "#5A7A6A" },
+        ],
+        interiorColors: [
+          { name: "Ониксовый чёрный", hex: "#232323" },
+          { name: "Речной синий", hex: "#3D5A73" },
+          { name: "Красная глина", hex: "#8C4A38" },
+          { name: "Звёздный фиолетовый", hex: "#5C4A63" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -231,6 +277,18 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Флагман BYD с фирменной батареей Blade — повышенная безопасность при аварии и долгий ресурс.",
+        exteriorColors: [
+          { name: "Чёрный", hex: "#171717" },
+          { name: "Серый", hex: "#7C7E82" },
+          { name: "Снежно-белый", hex: "#EFEFEC" },
+          { name: "Красный", hex: "#A32A2E" },
+          { name: "Синий (Аврора)", hex: "#2B4FA0" },
+        ],
+        interiorColors: [
+          { name: "Коричневый (Кирин)", hex: "#5A3A2A" },
+          { name: "Красный (Феникс)", hex: "#7A2027" },
+          { name: "Серый (Небесный свод)", hex: "#8A8C8F" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -258,6 +316,16 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Один из самых популярных электрокроссоверов BYD — баланс цены, запаса хода и практичности.",
+        exteriorColors: [
+          { name: "Снежно-белый", hex: "#EFEFEC" },
+          { name: "Каменно-серый", hex: "#8A8C8F" },
+          { name: "Чёрный", hex: "#1A1A1A" },
+          { name: "Красный", hex: "#A32A2E" },
+        ],
+        interiorColors: [
+          { name: "Чёрный", hex: "#1E1E1E" },
+          { name: "Светло-бежевый", hex: "#DCD3C4" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -391,6 +459,19 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Электрический седан Toyota, разработанный совместно с BYD в рамках СП BYD Toyota EV Technology и выпускаемый FAW-Toyota. Батарея LFP Blade и электромотор поставляются BYD, кузов и платформа — от Toyota.",
+        exteriorColors: [
+          { name: "Платиново-белый", hex: "#F1F0EA" },
+          { name: "Кристальный серый", hex: "#8B8D8F" },
+          { name: "Янтарно-коричневый", hex: "#6B4A38" },
+          { name: "Слюдяно-красный", hex: "#9E2B31" },
+          { name: "Чёрный", hex: "#161616" },
+        ],
+        interiorColors: [
+          { name: "Лунно-белый", hex: "#E8E4DC" },
+          { name: "Туманно-серый", hex: "#8D8D8D" },
+          { name: "Золотисто-серый", hex: "#6E6660" },
+          { name: "Золотисто-коричневый", hex: "#8A6A45" },
+        ],
         // Цены переведены из юаней ОРИЕНТИРОВОЧНО, это китайская розничная
         // цена без учёта доставки/растаможки в РФ — подтвердить у поставщика.
         trims: [
@@ -466,6 +547,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Электрический купе-кроссовер на 800V-платформе SEPA 2.0 с одной из лучших в классе систем автопилота XNGP.",
+        exteriorColors: [
+          { name: "Арктический белый", hex: "#F1F1EE" },
+          { name: "Полночный чёрный", hex: "#141416" },
+          { name: "Серебристый иней", hex: "#B9BDC0" },
+          { name: "Графитовый серый", hex: "#54565A" },
+          { name: "Огненный оранжевый", hex: "#E0562A" },
+        ],
+        interiorColors: [
+          { name: "Тёмно-серый", hex: "#3B3B3D" },
+          { name: "Светло-серый", hex: "#C7C6C2" },
+        ],
         trims: [
           {
             slug: "long-range",
@@ -504,6 +596,17 @@ export const brands: Brand[] = [
         seats: 6,
         description:
           "Флагманский SUV Li Auto с электрическим приводом и бензиновым генератором для увеличения запаса хода — можно ездить только на электричестве в городе и не бояться дальних поездок.",
+        exteriorColors: [
+          { name: "Золотистый металлик", hex: "#A98A5C" },
+          { name: "Серебристый металлик", hex: "#B9BABC" },
+          { name: "Серый металлик", hex: "#6E7073" },
+          { name: "Чёрный металлик", hex: "#161616" },
+        ],
+        interiorColors: [
+          { name: "Чёрно-коричневый", hex: "#4A362A" },
+          { name: "Чёрно-оранжевый", hex: "#B5501F" },
+          { name: "Чёрно-белый", hex: "#E7E5E0" },
+        ],
         trims: [
           {
             slug: "max",
@@ -543,6 +646,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Среднеразмерный кроссовер с большим салоном и хорошим соотношением цены и оснащения.",
+        exteriorColors: [
+          { name: "Жемчужно-белый", hex: "#EFEFEA" },
+          { name: "Полуночно-серый", hex: "#54565A" },
+          { name: "Нефритово-зелёный", hex: "#3E5A4E" },
+          { name: "Терракотовый серый", hex: "#8A7C70" },
+          { name: "Металлик чёрный", hex: "#161616" },
+        ],
+        interiorColors: [
+          { name: "Закатный оранжевый", hex: "#C05A2A" },
+          { name: "Звёздный фиолетовый", hex: "#5C4D63" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -581,6 +695,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Доступный компактный кроссовер с хорошим запасом хода для города и пригорода.",
+        exteriorColors: [
+          { name: "Жемчужно-белый", hex: "#EFEFEA" },
+          { name: "Элегантный серый", hex: "#8A8C8E" },
+          { name: "Скоростной серебристый", hex: "#C3C5C7" },
+          { name: "Полуночно-чёрный", hex: "#151515" },
+          { name: "Сосново-жёлтый", hex: "#D9B24C" },
+        ],
+        interiorColors: [
+          { name: "Чёрный", hex: "#1E1E1E" },
+          { name: "Чёрный с абрикосовым", hex: "#B98A5A" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -619,6 +744,18 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Полноприводный премиальный кроссовер с акцентом на комфорт салона и плавность хода.",
+        exteriorColors: [
+          { name: "Чистый белый", hex: "#EFEEE9" },
+          { name: "Звёздный серебристый", hex: "#B9BABC" },
+          { name: "Глубокий чёрный", hex: "#131313" },
+          { name: "Рассветный красный", hex: "#A6362E" },
+          { name: "Сумеречный фиолетовый", hex: "#5A4D63" },
+        ],
+        interiorColors: [
+          { name: "Рассветный оранжевый", hex: "#C0602E" },
+          { name: "Лунная тень (чёрный)", hex: "#1D1D1D" },
+          { name: "Светлое молочно-белое", hex: "#E9E4D8" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -657,6 +794,18 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Практичный электроседан от одного из старейших автомобильных брендов Китая.",
+        exteriorColors: [
+          { name: "Арктический белый", hex: "#EEEDE8" },
+          { name: "Квантовый серебристо-серый", hex: "#AEB0B2" },
+          { name: "Платиново-золотой", hex: "#B9A06A" },
+          { name: "Красный флага", hex: "#A32A2E" },
+          { name: "Полночный чёрный", hex: "#131313" },
+        ],
+        interiorColors: [
+          { name: "Чёрный", hex: "#1E1E1E" },
+          { name: "Какао-коричневый", hex: "#5C4534" },
+          { name: "Слоновая кость", hex: "#EDE6D8" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -695,6 +844,19 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Дебютный электромобиль Xiaomi — спортивный седан с большим запасом хода и продуманной экосистемой умных функций.",
+        exteriorColors: [
+          { name: "Бухтовый синий", hex: "#1E4E7A" },
+          { name: "Оливково-зелёный", hex: "#5A5F45" },
+          { name: "Жемчужно-белый", hex: "#EDEDE8" },
+          { name: "Бриллиантово-чёрный", hex: "#131313" },
+          { name: "Лавовый оранжевый", hex: "#C2551F" },
+        ],
+        interiorColors: [
+          { name: "Галактический серый", hex: "#5C5E62" },
+          { name: "Сумеречный красный", hex: "#7A2F2A" },
+          { name: "Туманный фиолетовый", hex: "#5A4E63" },
+          { name: "Обсидиановый чёрный", hex: "#1B1B1D" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -733,6 +895,19 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Кроссовер Changan с современным салоном и хорошим соотношением цены и технологичности.",
+        exteriorColors: [
+          { name: "Звёздный чёрный", hex: "#141414" },
+          { name: "Холодный звёздно-белый", hex: "#ECECE7" },
+          { name: "Лунно-каменный серый", hex: "#8B8D8F" },
+          { name: "Пылающий оранжевый", hex: "#C2551F" },
+          { name: "Космический жёлтый", hex: "#D9B23C" },
+          { name: "Туманно-синий", hex: "#2E5A8A" },
+        ],
+        interiorColors: [
+          { name: "Дикая зелень", hex: "#3E5A45" },
+          { name: "Теневой чёрный", hex: "#1E1E1E" },
+          { name: "Волна тепла (оранжевый)", hex: "#B95A2C" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -771,6 +946,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Премиальная модель с автопилотом Huawei ADS и батареей CATL.",
+        exteriorColors: [
+          { name: "Скальный серый", hex: "#7C7E80" },
+          { name: "Галечный чёрный", hex: "#161616" },
+          { name: "Рассветный белый", hex: "#ECEBE6" },
+          { name: "Звёздный фиолетовый", hex: "#5A4A63" },
+          { name: "Изумрудно-зелёный", hex: "#3E5A4C" },
+        ],
+        interiorColors: [
+          { name: "Звёздная река (фиолетовый)", hex: "#4A3A52" },
+          { name: "Облачные горы (коричневый)", hex: "#6E5238" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -809,6 +995,17 @@ export const brands: Brand[] = [
         seats: 5,
         description:
           "Премиальный кроссовер с батареей высокой плотности и продвинутой системой помощи водителю.",
+        exteriorColors: [
+          { name: "Белый «Афина»", hex: "#EEEDE7" },
+          { name: "Чёрный «Сезанн»", hex: "#151515" },
+          { name: "Серый «Рембрандт»", hex: "#8B8C8E" },
+          { name: "Бирюзовый «Моне»", hex: "#3E7A78" },
+          { name: "Розовый «Фердинанд»", hex: "#C88A96" },
+        ],
+        interiorColors: [
+          { name: "Бежевый «Дувр»", hex: "#D8CCB8" },
+          { name: "Бирюзовый «Эльба»", hex: "#3E6E70" },
+        ],
         trims: [
           {
             slug: "standart",
@@ -847,6 +1044,17 @@ export const brands: Brand[] = [
         seats: 4,
         description:
           "Один из самых доступных электромобилей на рынке — идеален для города, отличная альтернатива скутеру или второй машине в семью.",
+        exteriorColors: [
+          { name: "Молочно-белый", hex: "#F1EFE8" },
+          { name: "Свежий синий", hex: "#5A87A8" },
+          { name: "Мятно-зелёный", hex: "#7CA88C" },
+          { name: "Млечный путь синий", hex: "#3E5F8A" },
+          { name: "Мусс зелёный", hex: "#8CA870" },
+        ],
+        interiorColors: [
+          { name: "Мягкий белый", hex: "#EFEBE0" },
+          { name: "Тёплый коричневый", hex: "#8A6B4E" },
+        ],
         trims: [
           {
             slug: "standart",
