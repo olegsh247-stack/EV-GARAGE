@@ -15,6 +15,7 @@ export type Trim = {
   rangeKm: number;
   powerHp: number;
   powerKw: number;
+  powerP30Kw?: number; // P30 — максимальная 30-минутная мощность (кВт), указываем только если есть в документации/омологации
   torqueNm: number;
   accelSec: number; // 0-100 км/ч
   topSpeedKmh: number;
@@ -62,7 +63,7 @@ export const RANGE_SCALE_MAX = 700;
 // китайских каталогах (autohome.com.cn/config/spec/...). "Тип кузова" и
 // "Мест" берутся с уровня модели, остальное — с уровня конкретной версии.
 export function fullSpecRows(model: Model, trim: Trim) {
-  return [
+  const rows = [
     { label: "Тип кузова", value: model.bodyType },
     { label: "Тип двигателя", value: trim.powertrainType },
     { label: "Запас хода (CLTC)", value: `${trim.rangeKm} км` },
@@ -70,6 +71,14 @@ export function fullSpecRows(model: Model, trim: Trim) {
       label: "Мощность",
       value: `${trim.powerHp} л.с. (${trim.powerKw} кВт)`,
     },
+  ];
+  if (trim.powerP30Kw !== undefined) {
+    rows.push({
+      label: "P30 (30-мин. мощность)",
+      value: `${trim.powerP30Kw} кВт`,
+    });
+  }
+  rows.push(
     { label: "Крутящий момент", value: `${trim.torqueNm} Н·м` },
     { label: "Разгон 0–100", value: `${trim.accelSec} с` },
     { label: "Привод", value: trim.drive },
@@ -79,8 +88,9 @@ export function fullSpecRows(model: Model, trim: Trim) {
     },
     { label: "Быстрая зарядка", value: trim.fastCharge },
     { label: "Максимальная скорость", value: `${trim.topSpeedKmh} км/ч` },
-    { label: "Мест", value: String(model.seats) },
-  ];
+    { label: "Мест", value: String(model.seats) }
+  );
+  return rows;
 }
 
 export const brands: Brand[] = [
