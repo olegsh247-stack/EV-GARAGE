@@ -5,6 +5,7 @@ import { ModelCard } from "@/components/ModelCard";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { brands, getBrand } from "@/data/cars";
 import { getPhotoMap, photoKey } from "@/lib/photos";
+import { getCnyRubRate } from "@/lib/exchangeRate";
 
 // Обновляем раз в 30 секунд, чтобы новые фото из админки появлялись
 // без пересборки и ручного деплоя
@@ -22,7 +23,10 @@ export default async function BrandPage({
   const { brand: brandSlug } = await params;
   const brand = getBrand(brandSlug);
   if (!brand) notFound();
-  const photoMap = await getPhotoMap();
+  const [photoMap, cnyRate] = await Promise.all([
+    getPhotoMap(),
+    getCnyRubRate(),
+  ]);
 
   return (
     <>
@@ -61,6 +65,7 @@ export default async function BrandPage({
                 brand={brand}
                 model={model}
                 photoUrl={photoMap[photoKey(brand.slug, model.slug)]}
+                cnyRate={cnyRate}
               />
             ))}
           </div>

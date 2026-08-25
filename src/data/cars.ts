@@ -20,6 +20,7 @@ export type Trim = {
   slug: string; // для URL версии, напр. "550-pro"
   name: string; // отображаемое название версии/комплектации
   priceFrom: number; // цена в рублях (ориентировочно, нужно подтверждать)
+  priceCny?: number; // реальная цена в юанях, если известна — для точного расчёта таможни
   powertrainType: PowertrainType;
   rangeKm: number;
   powerHp: number;
@@ -699,6 +700,7 @@ export const brands: Brand[] = [
             slug: "550-joy",
             name: "550 Joy",
             priceFrom: 1750000,
+            priceCny: 129800,
             powertrainType: "BEV",
             rangeKm: 550,
             powerHp: 268,
@@ -716,6 +718,7 @@ export const brands: Brand[] = [
             slug: "550-pro",
             name: "550 Pro",
             priceFrom: 1890000,
+            priceCny: 139800,
             powertrainType: "BEV",
             rangeKm: 550,
             powerHp: 268,
@@ -733,6 +736,7 @@ export const brands: Brand[] = [
             slug: "550-pro-smart",
             name: "550 Pro Smart Edition",
             priceFrom: 2160000,
+            priceCny: 159800,
             powertrainType: "BEV",
             rangeKm: 550,
             powerHp: 268,
@@ -751,6 +755,7 @@ export const brands: Brand[] = [
             slug: "630-pro",
             name: "630 Pro",
             priceFrom: 2160000,
+            priceCny: 159800,
             powertrainType: "BEV",
             rangeKm: 630,
             powerHp: 268,
@@ -794,6 +799,7 @@ export const brands: Brand[] = [
             slug: "517-joy",
             name: "517 Joy",
             priceFrom: 2290000,
+            priceCny: 169800,
             powertrainType: "BEV",
             rangeKm: 517,
             powerHp: 181,
@@ -811,6 +817,7 @@ export const brands: Brand[] = [
             slug: "616-pro",
             name: "616 Pro",
             priceFrom: 2560000,
+            priceCny: 189800,
             powertrainType: "BEV",
             rangeKm: 616,
             powerHp: 241,
@@ -828,6 +835,7 @@ export const brands: Brand[] = [
             slug: "616-premium",
             name: "616 Premium",
             priceFrom: 2690000,
+            priceCny: 199800,
             powertrainType: "BEV",
             rangeKm: 616,
             powerHp: 241,
@@ -1534,6 +1542,7 @@ export const brands: Brand[] = [
             slug: "standart",
             name: "Стандарт",
             priceFrom: 3420000,
+            priceCny: 253500,
             powertrainType: "BEV",
             rangeKm: 835,
             powerHp: 315,
@@ -1551,6 +1560,7 @@ export const brands: Brand[] = [
             slug: "max",
             name: "Max",
             priceFrom: 4450000,
+            priceCny: 329900,
             powertrainType: "BEV",
             rangeKm: 760,
             powerHp: 681,

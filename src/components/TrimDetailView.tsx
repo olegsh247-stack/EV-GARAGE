@@ -8,7 +8,8 @@ import { ContactCTA } from "./ContactCTA";
 import { ColorSwatches } from "./ColorSwatches";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { formatPrice } from "@/lib/format";
-import { priceBreakdown } from "@/lib/pricing";
+import { fullPriceBreakdown } from "@/lib/pricing";
+import { getCnyRubRate } from "@/lib/exchangeRate";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 
 export async function TrimDetailView({
@@ -22,7 +23,8 @@ export async function TrimDetailView({
 }) {
   const hasMultipleTrims = model.trims.length > 1;
   const specRows = fullSpecRows(model, trim);
-  const price = priceBreakdown(trim.priceFrom);
+  const cnyRate = await getCnyRubRate();
+  const price = fullPriceBreakdown(trim, cnyRate);
   const photoMap = await getPhotoMap();
   const photoUrl = photoMap[photoKey(brand.slug, model.slug)];
 
@@ -126,8 +128,12 @@ export async function TrimDetailView({
               </div>
             </div>
             <p className="mt-2 text-xs text-ink-soft">
-              Таможня — расчёт появится позже. Логистика — 15% от цены в
-              Китае, но не менее 300 000 ₽.
+              Логистика — 15% от цены в Китае, но не менее 300 000 ₽.
+              Таможня включает таможенный сбор, единый таможенный платёж
+              (15%) и утилизационный сбор — расчёт для нового авто (до 1
+              года), личное пользование, по курсу юаня на сегодня.
+              {price.customsDetails.isP30Estimated &&
+                " 30-минутная мощность двигателя оценена по формуле (0,45 × пиковая), так как в документации не указана — точная сумма утильсбора может отличаться."}
             </p>
           </div>
 
@@ -233,7 +239,7 @@ export async function TrimDetailView({
                         {s.brand.name} {s.model.name}
                       </p>
                       <p className="font-mono text-xs text-ink-soft">
-                        {formatPrice(priceBreakdown(s.trim.priceFrom).total)}
+                        {formatPrice(fullPriceBreakdown(s.trim, cnyRate).total)}
                       </p>
                     </div>
                   </Link>

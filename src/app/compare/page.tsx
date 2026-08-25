@@ -15,11 +15,16 @@ import { totalPrice } from "@/lib/pricing";
 export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
   const [photoMap, setPhotoMap] = useState<Record<string, string>>({});
+  const [cnyRate, setCnyRate] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/photos")
       .then((r) => r.json())
       .then(setPhotoMap)
+      .catch(() => {});
+    fetch("/api/exchange-rate")
+      .then((r) => r.json())
+      .then((d) => setCnyRate(d.rate))
       .catch(() => {});
   }, []);
 
@@ -110,7 +115,9 @@ export default function ComparePage() {
                               {model.trims.length > 1 ? ` ${trim.name}` : ""}
                             </Link>
                             <p className="mt-0.5 font-mono text-xs text-ink-soft">
-                              {formatPrice(totalPrice(trim.priceFrom))}
+                              {cnyRate
+                                ? formatPrice(totalPrice(trim, cnyRate))
+                                : "…"}
                             </p>
                           </div>
                           <button

@@ -10,10 +10,12 @@ export function ModelCard({
   brand,
   model,
   photoUrl,
+  cnyRate,
 }: {
   brand: Brand;
   model: Model;
   photoUrl?: string;
+  cnyRate: number;
 }) {
   const trim = baseTrim(model);
 
@@ -39,7 +41,7 @@ export function ModelCard({
               Цена от
             </p>
             <p className="font-display text-lg font-semibold text-ink">
-              {formatPrice(totalPrice(trim.priceFrom))}
+              {formatPrice(totalPrice(trim, cnyRate))}
             </p>
             {model.trims.length > 1 && (
               <p className="mt-0.5 font-mono text-[10px] text-ink-soft">
