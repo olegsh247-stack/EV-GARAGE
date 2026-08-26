@@ -32,4 +32,11 @@ export const videoReviews: VideoReview[] = [
     brandSlug: "toyota",
     modelSlug: "toyota-bz5",
   },
+  {
+    youtubeId: "oVlnIhwAAH8",
+    title: "Презентация 5-го поколения Wuling Hongguang MiniEV",
+    channel: "Запись презентации бренда",
+    brandSlug: "wuling",
+    modelSlug: "wuling-hongguang-mini-ev",
+  },
 ];
