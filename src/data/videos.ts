@@ -39,4 +39,11 @@ export const videoReviews: VideoReview[] = [
     brandSlug: "wuling",
     modelSlug: "wuling-hongguang-mini-ev",
   },
+  {
+    youtubeId: "H6oZiNjzfy4",
+    title: "Презентация Geely Galaxy E8 (полная версия)",
+    channel: "Запись презентации бренда",
+    brandSlug: "geely",
+    modelSlug: "galaxy-e8",
+  },
 ];
