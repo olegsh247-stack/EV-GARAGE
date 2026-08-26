@@ -26,6 +26,8 @@ export type Trim = {
   powerHp: number;
   powerKw: number;
   powerP30Kw?: number; // P30 — максимальная 30-минутная мощность (кВт), указываем только если есть в документации/омологации
+  icePowerKw?: number; // мощность бензинового двигателя-генератора (кВт) — только для EREV, если известна
+  icePowerHp?: number; // то же в л.с.
   torqueNm: number;
   accelSec: number; // 0-100 км/ч
   topSpeedKmh: number;
@@ -89,6 +91,12 @@ export function fullSpecRows(model: Model, trim: Trim) {
     rows.push({
       label: "P30 (30-мин. мощность)",
       value: `${trim.powerP30Kw} кВт`,
+    });
+  }
+  if (trim.icePowerKw !== undefined) {
+    rows.push({
+      label: "Мощность бензинового двигателя",
+      value: `${trim.icePowerHp ?? Math.round(trim.icePowerKw * 1.35962)} л.с. (${trim.icePowerKw} кВт)`,
     });
   }
   rows.push(
@@ -1399,6 +1407,8 @@ export const brands: Brand[] = [
             rangeKm: 318,
             powerHp: 272,
             powerKw: 200,
+            icePowerKw: 110,
+            icePowerHp: 150,
             torqueNm: 410,
             accelSec: 7.6,
             topSpeedKmh: 180,
@@ -1417,6 +1427,8 @@ export const brands: Brand[] = [
             rangeKm: 259,
             powerHp: 483,
             powerKw: 355,
+            icePowerKw: 110,
+            icePowerHp: 150,
             torqueNm: 720,
             accelSec: 4.5,
             topSpeedKmh: 200,
@@ -1688,6 +1700,8 @@ export const brands: Brand[] = [
             rangeKm: 215,
             powerHp: 255,
             powerKw: 190,
+            icePowerKw: 70,
+            icePowerHp: 94,
             torqueNm: 320,
             accelSec: 7.5,
             topSpeedKmh: 180,
@@ -1706,6 +1720,8 @@ export const brands: Brand[] = [
             rangeKm: 285,
             powerHp: 255,
             powerKw: 190,
+            icePowerKw: 70,
+            icePowerHp: 94,
             torqueNm: 320,
             accelSec: 7.5,
             topSpeedKmh: 180,
