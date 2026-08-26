@@ -25,4 +25,11 @@ export const videoReviews: VideoReview[] = [
     brandSlug: "xiaomi",
     modelSlug: "xiaomi-su7",
   },
+  {
+    youtubeId: "aauVnWLzV-A",
+    title: "Toyota bZ5 — экстерьер и интерьер",
+    channel: "Дилерский обзор",
+    brandSlug: "toyota",
+    modelSlug: "toyota-bz5",
+  },
 ];
