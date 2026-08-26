@@ -6,28 +6,23 @@ export type VideoReview = {
   modelSlug: string;
 };
 
-// Реальные видеообзоры на русском языке, найдены на YouTube.
-// При добавлении новых моделей можно дополнять этот список.
+// ТОЛЬКО официальные видео с официальных YouTube-каналов производителей.
+// Обзоры сторонних блогеров/дилеров сюда не добавляем — только контент
+// от самого бренда. По мере появления официальных роликов по другим
+// моделям — дополнять этот список.
 export const videoReviews: VideoReview[] = [
   {
-    youtubeId: "9V4p2Tdryd0",
-    title: "Xiaomi SU7 в России — полный обзор",
-    channel: "YouTube",
+    youtubeId: "ZMqeskCcA3w",
+    title: "Zeekr 007 GT — официальное видео",
+    channel: "Zeekr (официальный канал)",
+    brandSlug: "zeekr",
+    modelSlug: "zeekr-007",
+  },
+  {
+    youtubeId: "5Ixe6Jwjr8U",
+    title: "Xiaomi SU7 — официальное видео",
+    channel: "Xiaomi (официальный канал)",
     brandSlug: "xiaomi",
     modelSlug: "xiaomi-su7",
-  },
-  {
-    youtubeId: "A20THM26_4c",
-    title: "Toyota bZ5 2025 — японцы вернулись в игру",
-    channel: "Sferacar",
-    brandSlug: "toyota",
-    modelSlug: "toyota-bz5",
-  },
-  {
-    youtubeId: "3l8OeSreup8",
-    title: "BYD Han — полный обзор, тест, история марки",
-    channel: "YouTube",
-    brandSlug: "byd",
-    modelSlug: "byd-han",
   },
 ];
