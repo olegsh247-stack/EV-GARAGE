@@ -5,7 +5,7 @@ export function ContactCTA({ modelName }: { modelName: string }) {
   return (
     <div className="rounded-2xl border border-line bg-surface-card p-6">
       <h3 className="font-display text-lg font-semibold text-ink">
-        Узнать точную цену и наличие
+        Контакты
       </h3>
       <p className="mt-1 text-sm text-ink-soft">
         Ответим в течение рабочего дня по {modelName}.
@@ -34,32 +34,6 @@ export function ContactCTA({ modelName }: { modelName: string }) {
           Позвонить
         </a>
       </div>
-
-      <form className="mt-6 flex flex-col gap-3 border-t border-line pt-6">
-        <p className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-          Или оставьте заявку
-        </p>
-        <input
-          type="text"
-          placeholder="Ваше имя"
-          className="rounded-lg border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft/60 focus:border-charge"
-        />
-        <input
-          type="tel"
-          placeholder="Телефон"
-          className="rounded-lg border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft/60 focus:border-charge"
-        />
-        <button
-          type="submit"
-          className="mt-1 rounded-full bg-ink px-4 py-3 text-sm font-medium text-surface transition-colors hover:bg-deep"
-        >
-          Отправить заявку
-        </button>
-        <p className="text-center text-xs text-ink-soft">
-          Форма пока не подключена к обработке — понадобится отдельная
-          настройка приёма заявок.
-        </p>
-      </form>
     </div>
   );
 }
