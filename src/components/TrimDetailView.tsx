@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/format";
 import { fullPriceBreakdown } from "@/lib/pricing";
 import { getCnyRubRate } from "@/lib/exchangeRate";
 import { getPhotoMap, photoKey } from "@/lib/photos";
+import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 
 export async function TrimDetailView({
   brand,
@@ -27,6 +28,8 @@ export async function TrimDetailView({
   const price = fullPriceBreakdown(trim, cnyRate);
   const photoMap = await getPhotoMap();
   const photoUrl = photoMap[photoKey(brand.slug, model.slug)];
+  const archived = await getArchivedModelKeys();
+  const isArchived = archived.has(modelKey(brand.slug, model.slug));
 
   // Ссылка на конкретную версию: самая дешёвая версия живёт на
   // /brand/x/y (без /trim-slug), остальные — на /brand/x/y/trim-slug
@@ -53,6 +56,13 @@ export async function TrimDetailView({
           ...(hasMultipleTrims ? [{ label: trim.name }] : []),
         ]}
       />
+
+      {isArchived && (
+        <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Эта модель больше не поставляется — характеристики и цена
+          сохранены для справки.
+        </div>
+      )}
 
       {/* Единая сетка на всю страницу: левая колонка — весь текст сверху
           вниз (включая характеристики), правая — фото сверху, CTA и
@@ -221,7 +231,12 @@ export async function TrimDetailView({
                 Похожие версии
               </p>
               <div className="mt-3 flex flex-col gap-2">
-                {similarTrims(model.slug, trim.priceFrom).map((s) => (
+                {similarTrims(model.slug, trim.priceFrom, 6)
+                  .filter(
+                    (s) => !archived.has(modelKey(s.brand.slug, s.model.slug))
+                  )
+                  .slice(0, 3)
+                  .map((s) => (
                   <Link
                     key={`${s.brand.slug}/${s.model.slug}/${s.trim.slug}`}
                     href={`/brand/${s.brand.slug}/${s.model.slug}${

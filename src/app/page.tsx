@@ -8,6 +8,7 @@ import { videoReviews } from "@/data/videos";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
 import { getCnyRubRate } from "@/lib/exchangeRate";
+import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 
 const steps = [
   {
@@ -34,6 +35,7 @@ const steps = [
 
 export default async function Home() {
   const cnyRate = await getCnyRubRate();
+  const archived = await getArchivedModelKeys();
 
   const topLists = [
     { title: "Топ по запасу хода", metric: "range" as const, unit: "км", read: (t: { rangeKm: number }) => `${t.rangeKm} км` },
@@ -105,7 +107,12 @@ export default async function Home() {
 
           <div className="mt-8 grid gap-5 sm:grid-cols-3">
             {topLists.map((list) => {
-              const items = topModelsBy(list.metric, 3);
+              const items = topModelsBy(list.metric, 8)
+                .filter(
+                  (item) =>
+                    !archived.has(modelKey(item.brand.slug, item.model.slug))
+                )
+                .slice(0, 3);
               return (
                 <div
                   key={list.title}

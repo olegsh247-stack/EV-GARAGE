@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ModelCard } from "@/components/ModelCard";
@@ -6,6 +7,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { brands, getBrand } from "@/data/cars";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 import { getCnyRubRate } from "@/lib/exchangeRate";
+import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 
 // Обновляем раз в 30 секунд, чтобы новые фото из админки появлялись
 // без пересборки и ручного деплоя
@@ -23,10 +25,18 @@ export default async function BrandPage({
   const { brand: brandSlug } = await params;
   const brand = getBrand(brandSlug);
   if (!brand) notFound();
-  const [photoMap, cnyRate] = await Promise.all([
+  const [photoMap, cnyRate, archived] = await Promise.all([
     getPhotoMap(),
     getCnyRubRate(),
+    getArchivedModelKeys(),
   ]);
+
+  const activeModels = brand.models.filter(
+    (m) => !archived.has(modelKey(brand.slug, m.slug))
+  );
+  const archivedModels = brand.models.filter((m) =>
+    archived.has(modelKey(brand.slug, m.slug))
+  );
 
   return (
     <>
@@ -59,7 +69,7 @@ export default async function BrandPage({
 
         <section className="mx-auto max-w-[1400px] px-5 py-10">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {brand.models.map((model) => (
+            {activeModels.map((model) => (
               <ModelCard
                 key={model.slug}
                 brand={brand}
@@ -69,6 +79,25 @@ export default async function BrandPage({
               />
             ))}
           </div>
+
+          {archivedModels.length > 0 && (
+            <div className="mt-10 border-t border-line pt-6">
+              <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+                Больше не поставляются
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {archivedModels.map((model) => (
+                  <Link
+                    key={model.slug}
+                    href={`/brand/${brand.slug}/${model.slug}`}
+                    className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-ink hover:text-ink"
+                  >
+                    {model.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       </main>
       <Footer />

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { brands } from "@/data/cars";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 import { PhotoUploadRow } from "./PhotoUploadRow";
@@ -23,6 +24,15 @@ export default async function AdminPage() {
             </h1>
           </div>
           <LogoutButton />
+        </div>
+
+        <div className="mt-4 flex gap-4 font-mono text-xs">
+          <Link href="/admin/models" className="text-ink-soft hover:text-ink">
+            Архив моделей →
+          </Link>
+          <Link href="/admin/suggestions" className="text-ink-soft hover:text-ink">
+            Предложения →
+          </Link>
         </div>
 
         {noBlobConfigured && (
