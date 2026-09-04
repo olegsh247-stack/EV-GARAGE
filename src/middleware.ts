@@ -5,6 +5,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Публичное чтение статуса архива нужно странице сравнения —
+  // изменение (POST) всё равно защищено ниже.
+  if (req.nextUrl.pathname === "/api/archive" && req.method === "GET") {
+    return NextResponse.next();
+  }
+
   const cookie = req.cookies.get("admin_auth")?.value;
   const password = process.env.ADMIN_PASSWORD;
 

@@ -16,6 +16,7 @@ export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
   const [photoMap, setPhotoMap] = useState<Record<string, string>>({});
   const [cnyRate, setCnyRate] = useState<number | null>(null);
+  const [archivedKeys, setArchivedKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/photos")
@@ -25,6 +26,12 @@ export default function ComparePage() {
     fetch("/api/exchange-rate")
       .then((r) => r.json())
       .then((d) => setCnyRate(d.rate))
+      .catch(() => {});
+    fetch("/api/archive")
+      .then((r) => r.json())
+      .then((entries: { key: string }[]) =>
+        setArchivedKeys(new Set(entries.map((e) => e.key)))
+      )
       .catch(() => {});
   }, []);
 
@@ -114,6 +121,11 @@ export default function ComparePage() {
                               {model.name}
                               {model.trims.length > 1 ? ` ${trim.name}` : ""}
                             </Link>
+                            {archivedKeys.has(`${brand.slug}/${model.slug}`) && (
+                              <span className="ml-1.5 rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[10px] text-amber-800">
+                                архив
+                              </span>
+                            )}
                             <p className="mt-0.5 font-mono text-xs text-ink-soft">
                               {cnyRate
                                 ? formatPrice(totalPrice(trim, cnyRate))
