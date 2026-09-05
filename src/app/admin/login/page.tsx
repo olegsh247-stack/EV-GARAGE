@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -44,14 +46,24 @@ export default function AdminLoginPage() {
           Введите пароль для доступа к загрузке фото
         </p>
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-          autoFocus
-          className="mt-6 w-full rounded-lg border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-charge"
-        />
+        <div className="relative mt-6">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+            autoFocus
+            className="w-full rounded-lg border border-line bg-surface px-4 py-2.5 pr-11 text-sm text-ink outline-none focus:border-charge"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
 
         {error && (
           <p className="mt-2 text-sm text-red-600">{error}</p>
