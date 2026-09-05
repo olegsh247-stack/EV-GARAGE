@@ -12,7 +12,7 @@ export function middleware(req: NextRequest) {
   }
 
   const cookie = req.cookies.get("admin_auth")?.value;
-  const password = process.env.ADMIN_PASSWORD;
+  const password = process.env.ADMIN_PASSWORD?.trim();
 
   // Если пароль вообще не настроен в Vercel — держим админку закрытой,
   // а не открытой по умолчанию.

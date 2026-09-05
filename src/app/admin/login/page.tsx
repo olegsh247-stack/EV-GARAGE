@@ -9,6 +9,11 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [debug, setDebug] = useState<{
+    envVarIsSet: boolean;
+    envVarLength: number;
+    submittedLength: number;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -30,6 +35,9 @@ export default function AdminLoginPage() {
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Ошибка входа");
+      if (data.debug) {
+        setDebug(data.debug);
+      }
     }
   }
 
@@ -67,6 +75,13 @@ export default function AdminLoginPage() {
 
         {error && (
           <p className="mt-2 text-sm text-red-600">{error}</p>
+        )}
+        {debug && (
+          <div className="mt-2 rounded-lg bg-amber-50 p-3 font-mono text-xs text-amber-900">
+            <p>Переменная задана на сервере: {debug.envVarIsSet ? "да" : "НЕТ"}</p>
+            <p>Длина пароля на сервере: {debug.envVarLength}</p>
+            <p>Длина того, что вы ввели: {debug.submittedLength}</p>
+          </div>
         )}
 
         <button
