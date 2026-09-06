@@ -1,36 +1,51 @@
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 
-export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const file = formData.get("file");
-  const slug = formData.get("slug");
+const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp"];
 
-  if (!(file instanceof File) || typeof slug !== "string" || !slug) {
-    return NextResponse.json({ error: "Нет файла или slug" }, { status: 400 });
-  }
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const body = (await req.json()) as HandleUploadBody;
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  // Проверяем пароль вручную — этот роут исключён из общего middleware,
+  // потому что Vercel сам вызывает его повторно (колбэк onUploadCompleted)
+  // без нашей cookie, и middleware бы такой запрос заблокировал.
+  const cookie = req.cookies.get("admin_auth")?.value;
+  const password = process.env.ADMIN_PASSWORD?.trim();
+  const authed = Boolean(password) && cookie === password;
+
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request: req,
+      onBeforeGenerateToken: async (pathname) => {
+        if (!authed) {
+          throw new Error("Не авторизован");
+        }
+        const ext = pathname.split(".").pop()?.toLowerCase() ?? "";
+        if (!ALLOWED_EXT.includes(ext)) {
+          throw new Error("Разрешены только JPG, PNG или WEBP");
+        }
+        return {
+          allowedContentTypes: [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ],
+          addRandomSuffix: false,
+          allowOverwrite: true,
+        };
+      },
+      onUploadCompleted: async () => {
+        // Ничего дополнительно делать не нужно — файл уже лежит по
+        // предсказуемому пути cars/{slug}.{ext}, getPhotoMap() найдёт его сам.
+      },
+    });
+
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Хранилище фото не подключено (нет BLOB_READ_WRITE_TOKEN)" },
-      { status: 500 }
-    );
-  }
-
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const allowed = ["jpg", "jpeg", "png", "webp"];
-  if (!allowed.includes(ext)) {
-    return NextResponse.json(
-      { error: "Разрешены только JPG, PNG или WEBP" },
+      { error: error instanceof Error ? error.message : "Ошибка загрузки" },
       { status: 400 }
     );
   }
-
-  const blob = await put(`cars/${slug}.${ext}`, file, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
-
-  return NextResponse.json({ url: blob.url });
 }

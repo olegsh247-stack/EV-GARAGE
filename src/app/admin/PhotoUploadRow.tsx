@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import { CarPhoto } from "@/components/CarPhoto";
 
 export function PhotoUploadRow({
@@ -23,19 +24,18 @@ export function PhotoUploadRow({
     setUploading(true);
     setError("");
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("slug", slug);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
 
     try {
-      const res = await fetch("/api/photos/upload", {
-        method: "POST",
-        body: formData,
+      // Загружаем файл напрямую из браузера в Vercel Blob — так фото
+      // с телефона (часто 5-15 МБ) не упирается в лимит размера запроса
+      // к серверной функции (4,5 МБ на бесплатном тарифе Vercel).
+      const blob = await upload(`cars/${slug}.${ext}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/photos/upload",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Ошибка загрузки");
       // добавляем метку времени, чтобы браузер не показывал старую версию из кэша
-      setUrl(`${data.url}?t=${Date.now()}`);
+      setUrl(`${blob.url}?t=${Date.now()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {

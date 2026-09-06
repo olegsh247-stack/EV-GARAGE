@@ -29,10 +29,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/api/photos/upload",
-    "/api/archive",
-    "/api/suggestions",
-  ],
+  matcher: ["/admin/:path*", "/api/archive", "/api/suggestions"],
 };
