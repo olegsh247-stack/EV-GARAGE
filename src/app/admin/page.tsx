@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { brands } from "@/data/cars";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 import { PhotoUploadRow } from "./PhotoUploadRow";
-import { LogoutButton } from "./LogoutButton";
+import { AdminNav } from "./AdminNav";
 
 // Всегда свежие данные — фото могут появляться в любой момент
 export const dynamic = "force-dynamic";
@@ -14,32 +13,13 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-surface px-5 py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Админка
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-ink">
-              Фото моделей
-            </h1>
-          </div>
-          <LogoutButton />
-        </div>
-
-        <div className="mt-4 flex gap-4 font-mono text-xs">
-          <Link href="/admin/models" className="text-ink-soft hover:text-ink">
-            Архив моделей →
-          </Link>
-          <Link href="/admin/suggestions" className="text-ink-soft hover:text-ink">
-            Предложения →
-          </Link>
-        </div>
+        <AdminNav title="Фото моделей" />
 
         {noBlobConfigured && (
           <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
             Хранилище фото (Vercel Blob) ещё не подключено — загрузка не
             будет работать, пока в настройках проекта на Vercel не создать
-            Blob Storage. Подробности объясню отдельно.
+            Blob Storage.
           </div>
         )}
 

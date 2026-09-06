@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { suggestions } from "@/data/suggestions";
 import { getSuggestionStatuses } from "@/lib/suggestionStatus";
 import { SuggestionActions } from "../SuggestionActions";
-import { LogoutButton } from "../LogoutButton";
+import { AdminNav } from "../AdminNav";
 
 export const dynamic = "force-dynamic";
 
@@ -12,26 +11,7 @@ export default async function AdminSuggestionsPage() {
   return (
     <div className="min-h-screen bg-surface px-5 py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Админка
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-ink">
-              Предложения
-            </h1>
-          </div>
-          <LogoutButton />
-        </div>
-
-        <div className="mt-4 flex gap-4 font-mono text-xs">
-          <Link href="/admin" className="text-ink-soft hover:text-ink">
-            ← Фото
-          </Link>
-          <Link href="/admin/models" className="text-ink-soft hover:text-ink">
-            ← Архив моделей
-          </Link>
-        </div>
+        <AdminNav title="Предложения" />
 
         <p className="mt-4 text-sm text-ink-soft">
           Кандидаты на добавление или архивацию, найденные при проверке

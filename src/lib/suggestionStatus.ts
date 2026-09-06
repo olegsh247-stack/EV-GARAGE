@@ -31,6 +31,13 @@ export async function getSuggestionStatuses(): Promise<
   return readStatusBlob();
 }
 
+export async function getPendingSuggestionCount(): Promise<number> {
+  const { suggestions } = await import("@/data/suggestions");
+  const statuses = await readStatusBlob();
+  return suggestions.filter((s) => (statuses[s.id] ?? "pending") === "pending")
+    .length;
+}
+
 export async function setSuggestionStatus(
   id: string,
   status: SuggestionStatus

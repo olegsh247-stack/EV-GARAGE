@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { brands } from "@/data/cars";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 import { ArchiveToggle } from "../ArchiveToggle";
-import { LogoutButton } from "../LogoutButton";
+import { AdminNav } from "../AdminNav";
 
 export const dynamic = "force-dynamic";
 
@@ -12,26 +11,7 @@ export default async function AdminModelsPage() {
   return (
     <div className="min-h-screen bg-surface px-5 py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Админка
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-ink">
-              Архив моделей
-            </h1>
-          </div>
-          <LogoutButton />
-        </div>
-
-        <div className="mt-4 flex gap-4 font-mono text-xs">
-          <Link href="/admin" className="text-ink-soft hover:text-ink">
-            ← Фото
-          </Link>
-          <Link href="/admin/suggestions" className="text-ink-soft hover:text-ink">
-            Предложения →
-          </Link>
-        </div>
+        <AdminNav title="Архив" />
 
         <p className="mt-4 text-sm text-ink-soft">
           Модели в архиве не показываются в каталоге, топах и сравнении, но их
