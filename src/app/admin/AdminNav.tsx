@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Lightbulb, Archive } from "lucide-react";
+import { ExternalLink, Lightbulb, Archive, Pencil } from "lucide-react";
 import { getPendingSuggestionCount } from "@/lib/suggestionStatus";
 import { LogoutButton } from "./LogoutButton";
 
@@ -11,7 +11,9 @@ export async function AdminNav({ title }: { title: string }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
-            Админка
+            <Link href="/admin" className="hover:text-ink">
+              Админка
+            </Link>
           </p>
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">
             {title}
@@ -47,6 +49,13 @@ export async function AdminNav({ title }: { title: string }) {
         >
           <Archive size={13} />
           Архив
+        </Link>
+        <Link
+          href="/admin/contacts"
+          className="flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-xs font-medium text-ink transition-colors hover:border-charge hover:text-charge"
+        >
+          <Pencil size={13} />
+          Контакты
         </Link>
       </div>
     </div>

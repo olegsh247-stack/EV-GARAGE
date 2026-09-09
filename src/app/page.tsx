@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BrandCard } from "@/components/BrandCard";
 import { brands, topModelsBy } from "@/data/cars";
-import { videoReviews } from "@/data/videos";
+import { getAllVideos } from "@/lib/videosStore";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
 import { getCnyRubRate } from "@/lib/exchangeRate";
@@ -36,6 +36,7 @@ const steps = [
 export default async function Home() {
   const cnyRate = await getCnyRubRate();
   const archived = await getArchivedModelKeys();
+  const videoReviews = await getAllVideos();
 
   const topLists = [
     { title: "Топ по запасу хода", metric: "range" as const, unit: "км", read: (t: { rangeKm: number }) => `${t.rangeKm} км` },

@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { contact } from "@/data/contact";
+import { getContact } from "@/lib/contactStore";
 import { Phone } from "lucide-react";
 import { CompareButton } from "./CompareButton";
 
-export function Header() {
+export async function Header() {
+  const contact = await getContact();
+
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4">

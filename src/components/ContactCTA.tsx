@@ -1,7 +1,9 @@
 import { Phone, MessageCircle, Send } from "lucide-react";
-import { contact } from "@/data/contact";
+import { getContact } from "@/lib/contactStore";
 
-export function ContactCTA({ modelName }: { modelName: string }) {
+export async function ContactCTA({ modelName }: { modelName: string }) {
+  const contact = await getContact();
+
   return (
     <div className="rounded-2xl border border-line bg-surface-card p-6">
       <h3 className="font-display text-lg font-semibold text-ink">
