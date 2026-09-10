@@ -3232,6 +3232,82 @@ export const brands: Brand[] = [
       },
     ],
   },
+  {
+    slug: "lynk-co",
+    name: "Lynk & Co",
+    country: "Китай (Geely)",
+    accent: "#E85D04",
+    logo: "LC",
+    description:
+      "Молодёжный бренд Geely. Гибридная система EM-P — не последовательный гибрид (EREV): выше определённой скорости бензиновый двигатель напрямую подключается к колёсам через 3-скоростную трансмиссию DHT, поэтому такие модели классифицируются как обычный подключаемый гибрид (PHEV).",
+    models: [
+      {
+        slug: "900",
+        name: "Lynk & Co 900",
+        tagline: "Флагманский шестиместный SUV с гибридом EM-P",
+        bodyType: "Полноразмерный SUV",
+        seats: 6,
+        description:
+          "Самый крупный и дорогой автомобиль бренда — трёхрядный SUV на платформе SPA Evo (развитие архитектуры Volvo). Первый серийный автомобиль в мире с чипом автопилота NVIDIA Thor.",
+        // Цены и часть характеристик — из CarNewsChina и Wikipedia (модель 2026
+        // года). Время быстрой зарядки в источниках дано противоречиво —
+        // указано ориентировочно.
+        trims: [
+          {
+            slug: "halo",
+            name: "1.5T Halo",
+            priceCny: 264800,
+            priceFrom: 3575000,
+            powertrainType: "PHEV",
+            rangeKm: 185,
+            totalRangeKm: 1355,
+            powerHp: 711,
+            powerKw: 530,
+            torqueNm: 920,
+            accelSec: 5.6,
+            topSpeedKmh: 220,
+            batteryKwh: 44.9,
+            batteryType: "NMC (CALB)",
+            fastCharge: "~30 мин (30→80%, оценка)",
+            drive: "Полный",
+            highlight: "Базовая версия, два электромотора + бензиновый 1.5T",
+            lengthMm: 5240,
+            widthMm: 1999,
+            heightMm: 1810,
+            wheelbaseMm: 3160,
+            curbWeightKg: 2730,
+            grossWeightKg: 3180,
+          },
+          {
+            slug: "2-0t-ultra",
+            name: "2.0T Ultra",
+            priceCny: 310800,
+            priceFrom: 4200000,
+            powertrainType: "PHEV",
+            rangeKm: 220,
+            totalRangeKm: 1350,
+            powerHp: 872,
+            powerKw: 650,
+            torqueNm: 1248,
+            accelSec: 4.3,
+            topSpeedKmh: 240,
+            batteryKwh: 52.4,
+            batteryType: "NMC (CATL Freevoy)",
+            fastCharge: "~25 мин (30→80%, оценка)",
+            drive: "Полный",
+            highlight:
+              "Три электромотора, бензиновый 2.0T, максимальная динамика",
+            lengthMm: 5240,
+            widthMm: 1999,
+            heightMm: 1810,
+            wheelbaseMm: 3160,
+            curbWeightKg: 2850,
+            grossWeightKg: 3300,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export function getBrand(slug: string) {
