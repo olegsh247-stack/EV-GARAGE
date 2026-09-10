@@ -1,4 +1,4 @@
-import { put, head } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 
 const CONTACT_KEY = "meta/contact.json";
 
@@ -21,10 +21,9 @@ const DEFAULT_CONTACT: Contact = {
 export async function getContact(): Promise<Contact> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return DEFAULT_CONTACT;
   try {
-    const info = await head(CONTACT_KEY);
-    const res = await fetch(info.url, { next: { revalidate: 30 } });
-    if (!res.ok) return DEFAULT_CONTACT;
-    const stored = (await res.json()) as Partial<Contact>;
+    const result = await get(CONTACT_KEY, { access: "private", useCache: false });
+    if (!result || result.statusCode !== 200) return DEFAULT_CONTACT;
+    const stored = (await new Response(result.stream).json()) as Partial<Contact>;
     return { ...DEFAULT_CONTACT, ...stored };
   } catch {
     return DEFAULT_CONTACT;
@@ -33,7 +32,7 @@ export async function getContact(): Promise<Contact> {
 
 export async function setContact(next: Contact) {
   await put(CONTACT_KEY, JSON.stringify(next), {
-    access: "public",
+    access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "application/json",

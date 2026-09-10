@@ -1,8 +1,7 @@
 import { list } from "@vercel/blob";
 
-// slug модели -> прямая ссылка на фото. Один файл на модель, имя
-// предсказуемое (cars/{brandSlug}-{modelSlug}.*), поэтому повторная
-// загрузка просто заменяет старое фото — ничего в коде менять не нужно.
+// slug модели -> публичный URL приложения. Сами Blob объекты остаются
+// приватными: их содержимое выдаёт серверный /api/photos/[slug] route.
 export async function getPhotoMap(): Promise<Record<string, string>> {
   // Пока Blob Storage не подключён (нет токена) — просто нет фото,
   // сайт продолжает работать с плейсхолдерами, сборка не падает.
@@ -14,7 +13,7 @@ export async function getPhotoMap(): Promise<Record<string, string>> {
     for (const blob of blobs) {
       const filename = blob.pathname.split("/").pop() ?? "";
       const slug = filename.replace(/\.[^.]+$/, "");
-      map[slug] = blob.url;
+      map[slug] = `/api/photos/${encodeURIComponent(slug)}?v=${blob.uploadedAt.getTime()}`;
     }
     return map;
   } catch {

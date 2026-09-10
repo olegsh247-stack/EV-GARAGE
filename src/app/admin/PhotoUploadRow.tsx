@@ -1,8 +1,54 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
 import { CarPhoto } from "@/components/CarPhoto";
+
+const MAX_UPLOAD_BYTES = 4_000_000;
+const MAX_IMAGE_SIZE = 1800;
+
+async function prepareImage(file: File): Promise<File> {
+  if (file.size <= MAX_UPLOAD_BYTES && file.type === "image/jpeg") {
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: "from-image",
+  });
+
+  const scale = Math.min(1, MAX_IMAGE_SIZE / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("Не удалось обработать изображение");
+  }
+
+  context.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.78);
+  });
+
+  if (!blob) {
+    throw new Error("Не удалось подготовить изображение");
+  }
+
+  if (blob.size > MAX_UPLOAD_BYTES) {
+    throw new Error("Фото слишком большое даже после сжатия. Выберите другое фото.");
+  }
+
+  return new File([blob], "model.jpg", {
+    type: "image/jpeg",
+    lastModified: Date.now(),
+  });
+}
 
 export function PhotoUploadRow({
   slug,
@@ -24,18 +70,26 @@ export function PhotoUploadRow({
     setUploading(true);
     setError("");
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-
     try {
-      // Загружаем файл напрямую из браузера в Vercel Blob — так фото
-      // с телефона (часто 5-15 МБ) не упирается в лимит размера запроса
-      // к серверной функции (4,5 МБ на бесплатном тарифе Vercel).
-      const blob = await upload(`cars/${slug}.${ext}`, file, {
-        access: "public",
-        handleUploadUrl: "/api/photos/upload",
+      const preparedFile = await prepareImage(file);
+      const formData = new FormData();
+      formData.append("file", preparedFile);
+      formData.append("slug", slug);
+
+      const response = await fetch("/api/photos/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
       });
-      // добавляем метку времени, чтобы браузер не показывал старую версию из кэша
-      setUrl(`${blob.url}?t=${Date.now()}`);
+
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Ошибка загрузки");
+      }
+
+      // Добавляем метку времени, чтобы браузер не показывал старую версию из кэша.
+      setUrl(`${data.url}?t=${Date.now()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
