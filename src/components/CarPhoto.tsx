@@ -5,11 +5,13 @@ export function CarPhoto({
   accent,
   className = "",
   alt = "",
+  fit = "cover",
 }: {
   photoUrl?: string;
   accent?: string;
   className?: string;
   alt?: string;
+  fit?: "cover" | "contain";
 }) {
   if (!photoUrl) {
     return <CarPlaceholder accent={accent} className={className} />;
@@ -20,7 +22,7 @@ export function CarPhoto({
     <img
       src={photoUrl}
       alt={alt}
-      className={`object-cover ${className}`}
+      className={`${fit === "contain" ? "object-contain" : "object-cover"} ${className}`}
     />
   );
 }
