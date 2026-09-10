@@ -1,4 +1,4 @@
-import { put, head } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import { videoReviews, type VideoReview } from "@/data/videos";
 
 const VIDEOS_KEY = "meta/videos.json";
@@ -6,10 +6,9 @@ const VIDEOS_KEY = "meta/videos.json";
 async function readVideosBlob(): Promise<VideoReview[]> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return [];
   try {
-    const info = await head(VIDEOS_KEY);
-    const res = await fetch(info.url, { next: { revalidate: 30 } });
-    if (!res.ok) return [];
-    return (await res.json()) as VideoReview[];
+    const result = await get(VIDEOS_KEY, { access: "private", useCache: false });
+    if (!result || result.statusCode !== 200) return [];
+    return (await new Response(result.stream).json()) as VideoReview[];
   } catch {
     return [];
   }
@@ -17,7 +16,7 @@ async function readVideosBlob(): Promise<VideoReview[]> {
 
 async function writeVideosBlob(entries: VideoReview[]) {
   await put(VIDEOS_KEY, JSON.stringify(entries), {
-    access: "public",
+    access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "application/json",

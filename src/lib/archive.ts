@@ -1,4 +1,4 @@
-import { put, head } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 
 const ARCHIVE_KEY = "meta/archived-models.json";
 
@@ -11,10 +11,9 @@ export type ArchivedEntry = {
 async function readArchiveBlob(): Promise<ArchivedEntry[]> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return [];
   try {
-    const info = await head(ARCHIVE_KEY);
-    const res = await fetch(info.url, { next: { revalidate: 30 } });
-    if (!res.ok) return [];
-    return (await res.json()) as ArchivedEntry[];
+    const result = await get(ARCHIVE_KEY, { access: "private", useCache: false });
+    if (!result || result.statusCode !== 200) return [];
+    return (await new Response(result.stream).json()) as ArchivedEntry[];
   } catch {
     return [];
   }
@@ -22,7 +21,7 @@ async function readArchiveBlob(): Promise<ArchivedEntry[]> {
 
 async function writeArchiveBlob(entries: ArchivedEntry[]) {
   await put(ARCHIVE_KEY, JSON.stringify(entries), {
-    access: "public",
+    access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "application/json",

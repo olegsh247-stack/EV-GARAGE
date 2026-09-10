@@ -7,6 +7,11 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/png",
   "image/webp",
 ]);
+const EXTENSION_BY_CONTENT_TYPE = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Проверяем пароль вручную — этот роут исключён из общего middleware.
@@ -45,14 +50,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Все фотографии из админки после обработки в браузере приходят как JPG.
-    // Файл хранится по предсказуемому имени, поэтому повторная загрузка
-    // заменяет старую фотографию этой модели.
-    const pathname = `cars/${slug}.jpg`;
-    const blob = await put(pathname, file, {
-      access: "public",
+    // Храним файл по предсказуемому имени. Тип файла сохраняем, чтобы API
+    // оставался корректным и для прямой загрузки PNG/WEBP, минуя браузерное
+    // сжатие. Повторная загрузка того же типа заменяет прежний файл.
+    const extension = EXTENSION_BY_CONTENT_TYPE[file.type as keyof typeof EXTENSION_BY_CONTENT_TYPE];
+    const pathname = `cars/${slug}.${extension}`;
+    await put(pathname, file, {
+      access: "private",
       allowOverwrite: true,
-      contentType: "image/jpeg",
+      contentType: file.type,
     });
 
     // Удаляем старые варианты расширения для этой модели, если они остались
@@ -66,7 +72,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       await del(staleUrls);
     }
 
-    return NextResponse.json({ url: blob.url });
+    // Приватный URL Blob нельзя передавать в браузер: его обслуживает
+    // публичный read-only route, который читает Blob только на сервере.
+    return NextResponse.json({ url: `/api/photos/${slug}?v=${Date.now()}` });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Ошибка загрузки" },
