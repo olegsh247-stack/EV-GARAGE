@@ -32,7 +32,7 @@ export function PhotoUploadRow({
       // к серверной функции (4,5 МБ на бесплатном тарифе Vercel).
       const blob = await upload(`cars/${slug}.${ext}`, file, {
         access: "public",
-        handleUploadUrl: "/api/photos/upload",
+        handleUploadUrl: `${window.location.origin}/api/photos/upload`,
       });
       // добавляем метку времени, чтобы браузер не показывал старую версию из кэша
       setUrl(`${blob.url}?t=${Date.now()}`);
