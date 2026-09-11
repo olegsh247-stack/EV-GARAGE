@@ -1,5 +1,6 @@
-import { get } from "@vercel/blob";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from "next/server";
+import { B2_BUCKET_NAME, getB2Client } from "@/lib/b2";
 
 const PHOTO_EXTENSION = /^(jpg|jpeg|png|webp)$/i;
 
@@ -10,31 +11,22 @@ export async function GET(
   const { slug } = await params;
   const extension = request.nextUrl.searchParams.get("ext") ?? "jpg";
 
-  if (
-    !/^[a-z0-9-]+$/i.test(slug) ||
-    !PHOTO_EXTENSION.test(extension) ||
-    !process.env.BLOB_READ_WRITE_TOKEN
-  ) {
+  if (!/^[a-z0-9-]+$/i.test(slug) || !PHOTO_EXTENSION.test(extension)) {
     return new NextResponse(null, { status: 404 });
   }
 
   try {
-    // Uploads use a deterministic pathname, so there is no need to list the
-    // store just to discover the file. This saves one Advanced Operation per
-    // image request while keeping the Blob store private.
     const pathname = `cars/${slug}.${extension.toLowerCase()}`;
-    const result = await get(pathname, {
-      access: "private",
-      useCache: false,
-    });
+    const result = await getB2Client().send(
+      new GetObjectCommand({ Bucket: B2_BUCKET_NAME, Key: pathname }),
+    );
 
-    if (!result || result.statusCode !== 200) {
-      return new NextResponse(null, { status: 404 });
-    }
+    if (!result.Body) return new NextResponse(null, { status: 404 });
 
-    return new NextResponse(result.stream, {
+    const stream = result.Body.transformToWebStream();
+    return new NextResponse(stream, {
       headers: {
-        "Content-Type": result.blob.contentType ?? "application/octet-stream",
+        "Content-Type": result.ContentType ?? "application/octet-stream",
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
