@@ -1,9 +1,6 @@
-import {
-  DeleteObjectsCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { del, put } from "@vercel/blob";
+import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
-import { B2_BUCKET_NAME, getB2Client } from "@/lib/b2";
 
 const MAX_UPLOAD_BYTES = 4_000_000;
 const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -12,6 +9,7 @@ const EXTENSION_BY_CONTENT_TYPE = {
   "image/png": "png",
   "image/webp": "webp",
 } as const;
+const PHOTO_MAP_TAG = "ev-garage-photo-map";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const cookie = req.cookies.get("admin_auth")?.value;
@@ -50,31 +48,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       file.type as keyof typeof EXTENSION_BY_CONTENT_TYPE
     ];
     const pathname = `cars/${slug}.${extension}`;
-    const body = Buffer.from(await file.arrayBuffer());
 
-    const client = getB2Client();
-    await client.send(
-      new PutObjectCommand({
-        Bucket: B2_BUCKET_NAME,
-        Key: pathname,
-        Body: body,
-        ContentType: file.type,
-      }),
-    );
+    await put(pathname, file, {
+      access: "private",
+      allowOverwrite: true,
+      contentType: file.type,
+    });
 
+    // Не делаем list() после upload: известны все допустимые имена для slug.
+    // del() не тарифицируется как Advanced Operation.
     const stalePathnames = [
       `cars/${slug}.jpg`,
       `cars/${slug}.jpeg`,
       `cars/${slug}.png`,
       `cars/${slug}.webp`,
     ].filter((item) => item !== pathname);
+    await del(stalePathnames);
 
-    await client.send(
-      new DeleteObjectsCommand({
-        Bucket: B2_BUCKET_NAME,
-        Delete: { Objects: stalePathnames.map((Key) => ({ Key })) },
-      }),
-    );
+    revalidateTag(PHOTO_MAP_TAG, "max");
 
     return NextResponse.json({
       url: `/api/photos/${slug}?ext=${extension}&v=${Date.now()}`,
