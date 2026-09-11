@@ -76,7 +76,7 @@ export function PhotoUploadRow({
       formData.append("file", preparedFile);
       formData.append("slug", slug);
 
-      const response = await fetch("/api/photos/upload", {
+      const response = await fetch("/api/photos/upload-fast", {
         method: "POST",
         body: formData,
         credentials: "same-origin",
@@ -89,7 +89,7 @@ export function PhotoUploadRow({
       }
 
       // Добавляем метку времени, чтобы браузер не показывал старую версию из кэша.
-      setUrl(`${data.url}?t=${Date.now()}`);
+      setUrl(`${data.url}&t=${Date.now()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
