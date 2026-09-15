@@ -30,6 +30,7 @@ export type Trim = {
   powerP30Kw?: number; // P30 — максимальная 30-минутная мощность (кВт), только для расчёта таможни, в характеристиках не показываем
   icePowerKw?: number; // мощность бензинового двигателя-генератора (кВт) — только для EREV, если известна
   icePowerHp?: number; // то же в л.с.
+  lidar?: string; // тип и число лидаров, если есть — напр. "1 × гибридный MEMS"
   torqueNm: number;
   accelSec: number; // 0-100 км/ч
   topSpeedKmh: number;
@@ -120,6 +121,9 @@ export function fullSpecRows(model: Model, trim: Trim) {
     },
     { label: "Быстрая зарядка", value: trim.fastCharge }
   );
+  if (trim.lidar) {
+    rows.push({ label: "Лидар", value: trim.lidar });
+  }
   if (trim.lengthMm && trim.widthMm && trim.heightMm) {
     rows.push({
       label: "Длина / Ширина / Высота",
@@ -228,6 +232,7 @@ export const brands: Brand[] = [
             fastCharge: "~15 мин (10→80%)",
             drive: "Задний",
             highlight: "Базовая версия, задний привод",
+            lidar: "1 × Hesai (стандартно)",
             lengthMm: 4865,
             widthMm: 1900,
             heightMm: 1450,
@@ -252,6 +257,7 @@ export const brands: Brand[] = [
             fastCharge: "~15 мин (10→80%)",
             drive: "Полный",
             highlight: "Полный привод, максимальная динамика",
+            lidar: "1 × Hesai (стандартно)",
             lengthMm: 4865,
             widthMm: 1900,
             heightMm: 1450,
@@ -286,6 +292,7 @@ export const brands: Brand[] = [
             batteryType: "LFP",
             fastCharge: "~15 мин (10→80%)",
             drive: "Задний",
+            lidar: "1 × Hesai, крыша (стандартно на всех версиях)",
             lengthMm: 4825,
             widthMm: 1930,
             heightMm: 1656,
@@ -310,6 +317,7 @@ export const brands: Brand[] = [
             fastCharge: "~15 мин (10→80%)",
             drive: "Полный",
             highlight: "Полный привод, до 802 км на топ-версии",
+            lidar: "1 × Hesai, крыша (стандартно на всех версиях)",
             lengthMm: 4825,
             widthMm: 1930,
             heightMm: 1656,
@@ -411,6 +419,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~30 мин (10→80%)",
             drive: "Полный",
+            lidar: "1 × Innovusion Falcon",
             lengthMm: 4790,
             widthMm: 1960,
             heightMm: 1499,
@@ -458,6 +467,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~32 мин (10→80%)",
             drive: "Полный",
+            lidar: "1 × Innovusion Falcon",
             lengthMm: 4854,
             widthMm: 1995,
             heightMm: 1703,
@@ -492,6 +502,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~30 мин (10→80%)",
             drive: "Полный",
+            lidar: "1 × Innovusion Falcon (часть системы Aquila)",
             lengthMm: 5101,
             widthMm: 1987,
             heightMm: 1505,
@@ -516,6 +527,7 @@ export const brands: Brand[] = [
             fastCharge: "~35 мин (10→80%)",
             drive: "Полный",
             highlight: "Увеличенная батарея, запас хода свыше 1000 км",
+            lidar: "1 × Innovusion Falcon (часть системы Aquila)",
             lengthMm: 5101,
             widthMm: 1987,
             heightMm: 1505,
@@ -550,6 +562,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~30 мин (10→80%)",
             drive: "Полный",
+            lidar: "1 × Innovusion Falcon (часть системы Aquila)",
             lengthMm: 5280,
             widthMm: 2010,
             heightMm: 1800,
@@ -1106,6 +1119,7 @@ export const brands: Brand[] = [
             fastCharge: "~30 мин (10→80%)",
             drive: "Передний",
             highlight: "Увеличенная батарея, лидар в топ-версии",
+            lidar: "1 × лидар (топ-версия)",
             lengthMm: 4600,
             widthMm: 1875,
             heightMm: 1645,
@@ -1162,6 +1176,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "20 мин (10→80%)",
             drive: "Задний",
+            lidar: "1 × RoboSense (серия M)",
             lengthMm: 4753,
             widthMm: 1920,
             heightMm: 1650,
@@ -1323,6 +1338,7 @@ export const brands: Brand[] = [
             fastCharge: "~20 мин (10→80%)",
             drive: "Полный",
             highlight: "215 км на электротяге + генератор — общий запас свыше 1300 км",
+            lidar: "1 × Hesai AT128",
             lengthMm: 5218,
             widthMm: 1998,
             heightMm: 1800,
@@ -1946,6 +1962,7 @@ export const brands: Brand[] = [
             fastCharge: "~12 мин (10→80%)",
             drive: "Полный",
             highlight: "Полный привод, максимальная динамика, лидар",
+            lidar: "1 × Hesai AT128",
             lengthMm: 4999,
             widthMm: 1996,
             heightMm: 1600,
@@ -2142,6 +2159,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~28 мин (10→80%)",
             drive: "Задний",
+            lidar: "1 × Huawei (гибридный, вращающееся зеркало)",
             lengthMm: 4825,
             widthMm: 1980,
             heightMm: 1620,
@@ -2176,6 +2194,7 @@ export const brands: Brand[] = [
             batteryType: "NMC",
             fastCharge: "~28 мин (10→80%)",
             drive: "Полный",
+            lidar: "1 × Huawei (гибридный, вращающееся зеркало)",
             lengthMm: 5020,
             widthMm: 1999,
             heightMm: 1450,
@@ -3038,6 +3057,7 @@ export const brands: Brand[] = [
             fastCharge: "8 мин (30→80%)",
             drive: "Полный",
             highlight: "Полный привод, лидар, 800В платформа",
+            lidar: "1 × лидар, крыша",
             lengthMm: 5010,
             widthMm: 1920,
             heightMm: 1465,
