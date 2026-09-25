@@ -27,9 +27,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-next-build
-          path: |
-            .open-next
-            wrangler.jsonc
+          path: .open-next
+          include-hidden-files: true
           retention-days: 2
 
       - name: Deploy to Cloudflare
