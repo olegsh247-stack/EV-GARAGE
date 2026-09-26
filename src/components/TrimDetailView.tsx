@@ -44,7 +44,7 @@ export async function TrimDetailView({
       : `/brand/${brand.slug}/${model.slug}/${t.slug}`;
 
   return (
-    <section className="mx-auto max-w-[1400px] px-5 pb-24 pt-10">
+    <section className="mx-auto w-full max-w-[1400px] min-w-0 px-5 pb-24 pt-10">
       <Breadcrumbs
         items={[
           { label: "Все марки", href: "/" },
@@ -66,12 +66,12 @@ export async function TrimDetailView({
         </div>
       )}
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-2">
-        <div>
+      <div className="mt-8 grid min-w-0 gap-10 lg:grid-cols-2">
+        <div className="min-w-0">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             {brand.name} · {model.bodyType}
           </p>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+          <h1 className="mt-2 break-words font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             {model.name}
             {hasMultipleTrims && (
               <span className="text-ink-soft"> · {trim.name}</span>
@@ -117,21 +117,21 @@ export async function TrimDetailView({
             </p>
 
             <div className="mt-3 flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-ink-soft">1. В Китае</span>
-                <span className="font-mono text-ink">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="shrink-0 text-ink-soft">1. В Китае</span>
+                <span className="min-w-0 break-all text-right font-mono text-ink">
                   {formatPrice(price.chinaPrice)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-ink-soft">2. Таможня</span>
-                <span className="font-mono text-ink">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="shrink-0 text-ink-soft">2. Таможня</span>
+                <span className="min-w-0 break-all text-right font-mono text-ink">
                   {formatPrice(price.customs)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-ink-soft">3. Логистика</span>
-                <span className="font-mono text-ink">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="shrink-0 text-ink-soft">3. Логистика</span>
+                <span className="min-w-0 break-all text-right font-mono text-ink">
                   {formatPrice(price.logistics)}
                 </span>
               </div>
@@ -165,18 +165,18 @@ export async function TrimDetailView({
             {model.description}
           </p>
 
-          <div className="mt-10">
+          <div className="mt-10 min-w-0">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Характеристики
             </p>
-            <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface-card">
+            <div className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface-card">
               {specRows.map((spec) => (
                 <div
                   key={spec.label}
-                  className="flex items-center justify-between px-6 py-4"
+                  className="flex items-start justify-between gap-3 px-4 py-4 sm:px-6"
                 >
-                  <span className="text-sm text-ink-soft">{spec.label}</span>
-                  <span className="font-mono text-sm font-medium text-ink">
+                  <span className="shrink-0 text-sm text-ink-soft">{spec.label}</span>
+                  <span className="min-w-0 break-words text-right font-mono text-sm font-medium text-ink">
                     {spec.value}
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export async function TrimDetailView({
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <PhotoGallery
             photos={gallery}
             accent={brand.accent}
@@ -193,7 +193,7 @@ export async function TrimDetailView({
           />
 
           {(model.exteriorColors || model.interiorColors) && (
-            <div className="mt-6 grid grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6">
               {model.exteriorColors && (
                 <ColorSwatches title="Цвета" colors={model.exteriorColors} />
               )}
@@ -227,7 +227,7 @@ export async function TrimDetailView({
                     href={`/brand/${s.brand.slug}/${s.model.slug}${
                       s.model.trims.length > 1 ? `/${s.trim.slug}` : ""
                     }`}
-                    className="group flex items-center gap-3 rounded-xl border border-line bg-surface-card p-2.5 transition-colors hover:border-ink"
+                    className="group flex min-w-0 items-center gap-3 rounded-xl border border-line bg-surface-card p-2.5 transition-colors hover:border-ink"
                   >
                     <CarPhoto
                       photoUrl={photoMap[photoKey(s.brand.slug, s.model.slug)]}
