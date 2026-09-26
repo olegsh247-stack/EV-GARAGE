@@ -1,44 +1,88 @@
-import { list } from "@vercel/blob";
-import { unstable_cache } from "next/cache";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const PHOTO_MAP_TAG = "ev-garage-photo-map";
+export type PhotoMeta = {
+  contentType: string;
+  ext: string;
+  updatedAt: number;
+};
 
-async function loadPhotoMap(): Promise<Record<string, string>> {
-  const { blobs } = await list({ prefix: "cars/" });
-  const map: Record<string, string> = {};
-
-  for (const blob of blobs) {
-    const filename = blob.pathname.split("/").pop() ?? "";
-    const match = filename.match(/^(.+)\.(jpg|jpeg|png|webp)$/i);
-    if (!match) continue;
-
-    const slug = match[1];
-    const extension = match[2].toLowerCase();
-    map[slug] = `/api/photos/${encodeURIComponent(slug)}?ext=${extension}&v=${blob.uploadedAt.getTime()}`;
-  }
-
-  return map;
+function photoObjectKey(slug: string) {
+  return `cars/${slug}`;
 }
 
-// Listing the photo store is an Advanced Operation, so keep the result in the
-// Next.js Data Cache instead of listing Blob Storage for every model page.
-const getCachedPhotoMap = unstable_cache(loadPhotoMap, [PHOTO_MAP_TAG], {
-  tags: [PHOTO_MAP_TAG],
-  revalidate: 3600,
-});
+async function getPhotosKv() {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    return (env as { PHOTOS_KV?: KVNamespace }).PHOTOS_KV ?? null;
+  } catch {
+    return null;
+  }
+}
 
-// slug модели -> публичный URL приложения. Сами Blob объекты остаются
-// приватными: их содержимое выдаёт серверный /api/photos/[slug] route.
 export async function getPhotoMap(): Promise<Record<string, string>> {
-  // Пока Blob Storage не подключён (нет токена) — просто нет фото,
-  // сайт продолжает работать с плейсхолдерами, сборка не падает.
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return {};
+  const kv = await getPhotosKv();
+  if (!kv) return {};
 
   try {
-    return await getCachedPhotoMap();
+    const listed = await kv.list({ prefix: "cars/" });
+    const map: Record<string, string> = {};
+
+    for (const key of listed.keys) {
+      const slug = key.name.replace(/^cars\//, "");
+      if (!slug || slug.includes("/")) continue;
+
+      const meta = (key.metadata ?? {}) as Partial<PhotoMeta>;
+      const ext = meta.ext ?? "jpg";
+      const version = meta.updatedAt ?? Date.now();
+      map[slug] = `/api/photos/${encodeURIComponent(slug)}?ext=${ext}&v=${version}`;
+    }
+
+    return map;
   } catch {
     return {};
   }
+}
+
+export async function putPhoto(
+  slug: string,
+  data: ArrayBuffer,
+  contentType: string,
+  ext: string,
+): Promise<PhotoMeta> {
+  const kv = await getPhotosKv();
+  if (!kv) {
+    throw new Error("Хранилище фото не подключено");
+  }
+
+  const meta: PhotoMeta = {
+    contentType,
+    ext,
+    updatedAt: Date.now(),
+  };
+
+  await kv.put(photoObjectKey(slug), data, { metadata: meta });
+  return meta;
+}
+
+export async function getPhoto(
+  slug: string,
+): Promise<{ body: ArrayBuffer; meta: PhotoMeta } | null> {
+  const kv = await getPhotosKv();
+  if (!kv) return null;
+
+  const result = await kv.getWithMetadata<PhotoMeta>(photoObjectKey(slug), {
+    type: "arrayBuffer",
+  });
+
+  if (!result.value) return null;
+
+  const meta: PhotoMeta = {
+    contentType: result.metadata?.contentType ?? "image/jpeg",
+    ext: result.metadata?.ext ?? "jpg",
+    updatedAt: result.metadata?.updatedAt ?? Date.now(),
+  };
+
+  return { body: result.value, meta };
 }
 
 export function photoKey(brandSlug: string, modelSlug: string) {
