@@ -62,6 +62,16 @@ async function prepareImage(file: File): Promise<File> {
   });
 }
 
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) {
+    return list;
+  }
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
 export function PhotoGalleryEditor({
   slug,
   accent,
@@ -75,8 +85,11 @@ export function PhotoGalleryEditor({
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
+  const pointerIdRef = useRef<number | null>(null);
 
   async function uploadOne(file: File, index?: number): Promise<string> {
     const prepared = await prepareImage(file);
@@ -123,7 +136,7 @@ export function PhotoGalleryEditor({
           const pos = next.findIndex((p) => indexFromUrl(p) === replaceIndex);
           if (pos >= 0) next[pos] = url;
           else next.push(url);
-          return next.sort((a, b) => indexFromUrl(a) - indexFromUrl(b));
+          return next;
         });
       } else {
         const freeSlots = MAX_PHOTOS_PER_MODEL - photos.length;
@@ -138,9 +151,7 @@ export function PhotoGalleryEditor({
         for (let i = 0; i < batch.length; i++) {
           setProgress(`${i + 1} / ${batch.length}`);
           const url = await uploadOne(batch[i]);
-          setPhotos((prev) =>
-            [...prev, url].sort((a, b) => indexFromUrl(a) - indexFromUrl(b)),
-          );
+          setPhotos((prev) => [...prev, url]);
         }
       }
     } catch (e) {
@@ -175,6 +186,66 @@ export function PhotoGalleryEditor({
     }
   }
 
+  async function saveOrder(nextPhotos: string[]) {
+    const order = nextPhotos.map(indexFromUrl);
+    const response = await fetch("/api/photos/reorder", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, order }),
+    });
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      throw new Error(data.error || "Не удалось сохранить порядок");
+    }
+  }
+
+  async function finishDrag(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) {
+      setDragFrom(null);
+      setDragOver(null);
+      return;
+    }
+    const next = moveItem(photos, from, to);
+    const prev = photos;
+    setPhotos(next);
+    setDragFrom(null);
+    setDragOver(null);
+    setBusy(true);
+    setError("");
+    try {
+      await saveOrder(next);
+    } catch (e) {
+      setPhotos(prev);
+      setError(e instanceof Error ? e.message : "Ошибка сортировки");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onPointerDown(e: React.PointerEvent, index: number) {
+    if (busy) return;
+    // Don't start drag from buttons
+    if ((e.target as HTMLElement).closest("button")) return;
+    pointerIdRef.current = e.pointerId;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setDragFrom(index);
+    setDragOver(index);
+  }
+
+  function onPointerEnter(index: number) {
+    if (dragFrom === null) return;
+    setDragOver(index);
+  }
+
+  function onPointerUp() {
+    if (dragFrom === null) return;
+    const from = dragFrom;
+    const to = dragOver ?? dragFrom;
+    pointerIdRef.current = null;
+    void finishDrag(from, to);
+  }
+
   const canAdd = photos.length < MAX_PHOTOS_PER_MODEL;
 
   return (
@@ -188,6 +259,11 @@ export function PhotoGalleryEditor({
             {photos.length} / {MAX_PHOTOS_PER_MODEL}
             {progress ? ` · ${progress}` : ""}
           </p>
+          {photos.length > 1 && (
+            <p className="mt-1 text-[11px] text-ink-soft">
+              Перетащите фото, чтобы изменить порядок
+            </p>
+          )}
         </div>
         <button
           type="button"
@@ -227,11 +303,29 @@ export function PhotoGalleryEditor({
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {photos.map((url) => {
+          {photos.map((url, pos) => {
             const index = indexFromUrl(url);
+            const isDragging = dragFrom === pos;
+            const isOver = dragOver === pos && dragFrom !== null && dragFrom !== pos;
             return (
-              <div key={url} className="relative overflow-hidden rounded-xl border border-line">
-                <CarPhoto photoUrl={url} accent={accent} className="h-24 w-full" />
+              <div
+                key={url}
+                onPointerDown={(e) => onPointerDown(e, pos)}
+                onPointerEnter={() => onPointerEnter(pos)}
+                onPointerUp={onPointerUp}
+                onPointerCancel={() => {
+                  setDragFrom(null);
+                  setDragOver(null);
+                }}
+                className={`relative touch-none overflow-hidden rounded-xl border bg-surface select-none ${
+                  isDragging
+                    ? "border-charge opacity-60"
+                    : isOver
+                      ? "border-charge"
+                      : "border-line"
+                } ${busy ? "pointer-events-none" : "cursor-grab active:cursor-grabbing"}`}
+              >
+                <CarPhoto photoUrl={url} accent={accent} className="h-24 w-full pointer-events-none" />
                 <div className="flex border-t border-line">
                   <button
                     type="button"
