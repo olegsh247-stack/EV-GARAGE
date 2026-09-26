@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Brand, Model, Trim } from "@/data/cars";
 import { fullSpecRows, similarTrims, RANGE_SCALE_MAX } from "@/data/cars";
 import { CarPhoto } from "./CarPhoto";
+import { PhotoGallery } from "./PhotoGallery";
 import { ChargeBar } from "./ChargeBar";
 import { AddToCompareButton } from "./AddToCompareButton";
 import { ContactCTA } from "./ContactCTA";
@@ -10,7 +11,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { formatPrice } from "@/lib/format";
 import { fullPriceBreakdown } from "@/lib/pricing";
 import { getCnyRubRate } from "@/lib/exchangeRate";
-import { getPhotoMap, photoKey } from "@/lib/photos";
+import { getPhotoGallery, getPhotoMap, photoKey } from "@/lib/photos";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 
 export async function TrimDetailView({
@@ -26,13 +27,14 @@ export async function TrimDetailView({
   const specRows = fullSpecRows(model, trim);
   const cnyRate = await getCnyRubRate();
   const price = fullPriceBreakdown(trim, cnyRate);
-  const photoMap = await getPhotoMap();
-  const photoUrl = photoMap[photoKey(brand.slug, model.slug)];
-  const archived = await getArchivedModelKeys();
+  const key = photoKey(brand.slug, model.slug);
+  const [photoMap, gallery, archived] = await Promise.all([
+    getPhotoMap(),
+    getPhotoGallery(key),
+    getArchivedModelKeys(),
+  ]);
   const isArchived = archived.has(modelKey(brand.slug, model.slug));
 
-  // Ссылка на конкретную версию: самая дешёвая версия живёт на
-  // /brand/x/y (без /trim-slug), остальные — на /brand/x/y/trim-slug
   const baseSlug = [...model.trims].sort(
     (a, b) => a.priceFrom - b.priceFrom
   )[0].slug;
@@ -64,9 +66,6 @@ export async function TrimDetailView({
         </div>
       )}
 
-      {/* Единая сетка на всю страницу: левая колонка — весь текст сверху
-          вниз (включая характеристики), правая — фото сверху, CTA и
-          похожие версии снизу. Так оба столбца всегда совпадают по ширине. */}
       <div className="mt-8 grid gap-10 lg:grid-cols-2">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
@@ -166,7 +165,6 @@ export async function TrimDetailView({
             {model.description}
           </p>
 
-          {/* Характеристики — в той же колонке, той же ширины */}
           <div className="mt-10">
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Характеристики
@@ -188,23 +186,11 @@ export async function TrimDetailView({
         </div>
 
         <div>
-          <CarPhoto
-            photoUrl={photoUrl}
+          <PhotoGallery
+            photos={gallery}
             accent={brand.accent}
-            className="h-72 w-full rounded-2xl sm:h-96"
             alt={model.name}
           />
-          {!photoUrl && (
-            <div className="mt-3 grid grid-cols-4 gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <CarPhoto
-                  key={i}
-                  accent={brand.accent}
-                  className="h-16 w-full rounded-lg sm:h-20"
-                />
-              ))}
-            </div>
-          )}
 
           {(model.exteriorColors || model.interiorColors) && (
             <div className="mt-6 grid grid-cols-2 gap-6">
@@ -220,7 +206,6 @@ export async function TrimDetailView({
             </div>
           )}
 
-          {/* CTA и похожие версии — в той же колонке, что и фото, прилипает при скролле */}
           <div className="mt-6 lg:sticky lg:top-24">
             <ContactCTA
               modelName={`${model.name}${hasMultipleTrims ? ` ${trim.name}` : ""}`}
