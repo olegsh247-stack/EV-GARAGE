@@ -2,12 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getModel, baseTrim } from "@/data/cars";
-import { getPhotoMap, photoKey } from "@/lib/photos";
+import { getPhotoGallery, photoKey } from "@/lib/photos";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 import { getVideosForModel } from "@/lib/videosStore";
 import { formatPrice } from "@/lib/format";
 import { AdminNav } from "../../../AdminNav";
-import { PhotoUploadRow } from "../../../PhotoUploadRow";
+import { PhotoGalleryEditor } from "../../../PhotoGalleryEditor";
 import { ArchiveToggle } from "../../../ArchiveToggle";
 import { VideoLinkForm } from "../../../VideoLinkForm";
 
@@ -24,8 +24,8 @@ export default async function AdminModelPage({
   const { brand, model } = found;
   const key = photoKey(brand.slug, model.slug);
 
-  const [photoMap, archived, videos] = await Promise.all([
-    getPhotoMap(),
+  const [gallery, archived, videos] = await Promise.all([
+    getPhotoGallery(key),
     getArchivedModelKeys(),
     getVideosForModel(brand.slug, model.slug),
   ]);
@@ -46,13 +46,11 @@ export default async function AdminModelPage({
           {brand.name}
         </Link>
 
-        {/* Фото слева, название + архивация справа — как на сайте */}
         <div className="mt-6 grid gap-8 sm:grid-cols-2">
-          <PhotoUploadRow
+          <PhotoGalleryEditor
             slug={key}
-            label="Фото модели"
             accent={brand.accent}
-            initialUrl={photoMap[key]}
+            initialPhotos={gallery}
           />
 
           <div className="flex flex-col justify-center gap-3">
@@ -75,7 +73,6 @@ export default async function AdminModelPage({
           </div>
         </div>
 
-        {/* Версии — только просмотр, не редактируются здесь */}
         <div className="mt-10">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Версии · {model.trims.length}
@@ -99,7 +96,6 @@ export default async function AdminModelPage({
           </p>
         </div>
 
-        {/* Видео модели */}
         <div className="mt-10">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Видео
