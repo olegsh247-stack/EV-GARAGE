@@ -10,15 +10,26 @@ export type PhotoMeta = {
   index: number;
 };
 
+type GalleryIndex = {
+  items: Array<{ index: number; ext: string; updatedAt: number }>;
+};
+
 type PhotosKv = {
   list: (options: {
     prefix?: string;
-  }) => Promise<{ keys: Array<{ name: string; metadata?: unknown }> }>;
+    limit?: number;
+    cursor?: string;
+  }) => Promise<{
+    keys: Array<{ name: string; metadata?: unknown }>;
+    list_complete: boolean;
+    cursor?: string;
+  }>;
   put: (
     key: string,
-    value: ArrayBuffer,
+    value: ArrayBuffer | string,
     options?: { metadata?: PhotoMeta },
   ) => Promise<void>;
+  get: (key: string, options?: { type: "text" | "json" }) => Promise<string | null>;
   getWithMetadata: (
     key: string,
     options: { type: "arrayBuffer" },
@@ -28,6 +39,10 @@ type PhotosKv = {
 
 function photoObjectKey(slug: string, index: number) {
   return `cars/${slug}/${index}`;
+}
+
+function galleryIndexKey(slug: string) {
+  return `cars/${slug}/_index`;
 }
 
 function legacyPhotoKey(slug: string) {
@@ -47,24 +62,123 @@ async function getPhotosKv(): Promise<PhotosKv | null> {
   }
 }
 
-function parseIndexFromKey(name: string, slug: string): number | null {
-  const prefix = `cars/${slug}/`;
-  if (name.startsWith(prefix)) {
-    const rest = name.slice(prefix.length);
-    if (/^\d+$/.test(rest)) return Number(rest);
-    return null;
+async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryIndex> {
+  try {
+    const raw = await kv.get(galleryIndexKey(slug), { type: "text" });
+    if (raw) {
+      const parsed = JSON.parse(raw) as GalleryIndex;
+      if (Array.isArray(parsed.items)) {
+        return {
+          items: parsed.items
+            .filter(
+              (item) =>
+                Number.isInteger(item.index) &&
+                item.index >= 0 &&
+                item.index < MAX_PHOTOS_PER_MODEL,
+            )
+            .sort((a, b) => a.index - b.index),
+        };
+      }
+    }
+  } catch {
+    /* rebuild below */
   }
-  if (name === legacyPhotoKey(slug)) return 0;
-  return null;
+
+  // Rebuild from keys (legacy + indexed)
+  const items: GalleryIndex["items"] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await kv.list({
+      prefix: `cars/${slug}/`,
+      limit: 100,
+      cursor,
+    });
+    for (const key of listed.keys) {
+      if (key.name.endsWith("/_index")) continue;
+      const rest = key.name.slice(`cars/${slug}/`.length);
+      if (!/^\d+$/.test(rest)) continue;
+      const index = Number(rest);
+      const meta = (key.metadata ?? {}) as Partial<PhotoMeta>;
+      items.push({
+        index,
+        ext: meta.ext ?? "jpg",
+        updatedAt: meta.updatedAt ?? Date.now(),
+      });
+    }
+    cursor = listed.list_complete ? undefined : listed.cursor;
+  } while (cursor);
+
+  // Legacy single key
+  try {
+    const legacy = await kv.getWithMetadata(legacyPhotoKey(slug), {
+      type: "arrayBuffer",
+    });
+    if (legacy.value && !items.some((i) => i.index === 0)) {
+      items.push({
+        index: 0,
+        ext: legacy.metadata?.ext ?? "jpg",
+        updatedAt: legacy.metadata?.updatedAt ?? Date.now(),
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+
+  items.sort((a, b) => a.index - b.index);
+  const indexDoc: GalleryIndex = { items };
+  try {
+    await kv.put(galleryIndexKey(slug), JSON.stringify(indexDoc));
+  } catch {
+    /* ignore */
+  }
+  return indexDoc;
+}
+
+async function writeGalleryIndex(kv: PhotosKv, slug: string, index: GalleryIndex) {
+  index.items.sort((a, b) => a.index - b.index);
+  await kv.put(galleryIndexKey(slug), JSON.stringify(index));
 }
 
 export async function getPhotoMap(): Promise<Record<string, string>> {
-  const galleries = await getAllGalleries();
-  const map: Record<string, string> = {};
-  for (const [slug, urls] of Object.entries(galleries)) {
-    if (urls[0]) map[slug] = urls[0];
+  const kv = await getPhotosKv();
+  if (!kv) return {};
+
+  try {
+    const map: Record<string, string> = {};
+    let cursor: string | undefined;
+    do {
+      const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
+      for (const key of listed.keys) {
+        if (!key.name.endsWith("/_index")) continue;
+        const slug = key.name.slice("cars/".length, -"/_index".length);
+        if (!slug) continue;
+        const gallery = await getPhotoGallery(slug);
+        if (gallery[0]) map[slug] = gallery[0];
+      }
+      cursor = listed.list_complete ? undefined : listed.cursor;
+    } while (cursor);
+
+    // Also scan legacy keys without index
+    cursor = undefined;
+    do {
+      const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
+      for (const key of listed.keys) {
+        const parts = key.name.split("/");
+        if (parts.length === 2 && parts[0] === "cars") {
+          const slug = parts[1];
+          if (!map[slug]) {
+            const gallery = await getPhotoGallery(slug);
+            if (gallery[0]) map[slug] = gallery[0];
+          }
+        }
+      }
+      cursor = listed.list_complete ? undefined : listed.cursor;
+    } while (cursor);
+
+    return map;
+  } catch {
+    return {};
   }
-  return map;
 }
 
 export async function getPhotoGallery(slug: string): Promise<string[]> {
@@ -72,81 +186,20 @@ export async function getPhotoGallery(slug: string): Promise<string[]> {
   if (!kv || !/^[a-z0-9-]+$/i.test(slug)) return [];
 
   try {
-    const listed = await kv.list({ prefix: `cars/${slug}` });
-    const entries: Array<{ index: number; url: string }> = [];
-
-    for (const key of listed.keys) {
-      const index = parseIndexFromKey(key.name, slug);
-      if (index === null || index < 0 || index >= MAX_PHOTOS_PER_MODEL) continue;
-      const meta = (key.metadata ?? {}) as Partial<PhotoMeta>;
-      const ext = meta.ext ?? "jpg";
-      const version = meta.updatedAt ?? Date.now();
-      entries.push({ index, url: photoUrl(slug, index, version, ext) });
-    }
-
-    entries.sort((a, b) => a.index - b.index);
-    return entries.map((e) => e.url);
+    const index = await readGalleryIndex(kv, slug);
+    return index.items.map((item) =>
+      photoUrl(slug, item.index, item.updatedAt, item.ext),
+    );
   } catch {
     return [];
-  }
-}
-
-async function getAllGalleries(): Promise<Record<string, string[]>> {
-  const kv = await getPhotosKv();
-  if (!kv) return {};
-
-  try {
-    const listed = await kv.list({ prefix: "cars/" });
-    const bySlug = new Map<string, Array<{ index: number; url: string }>>();
-
-    for (const key of listed.keys) {
-      const parts = key.name.split("/");
-      if (parts[0] !== "cars" || parts.length < 2) continue;
-
-      const slug = parts[1];
-      let index: number;
-      if (parts.length === 2) {
-        index = 0;
-      } else if (parts.length === 3 && /^\d+$/.test(parts[2])) {
-        index = Number(parts[2]);
-      } else {
-        continue;
-      }
-
-      if (index < 0 || index >= MAX_PHOTOS_PER_MODEL) continue;
-
-      const meta = (key.metadata ?? {}) as Partial<PhotoMeta>;
-      const ext = meta.ext ?? "jpg";
-      const version = meta.updatedAt ?? Date.now();
-      const list = bySlug.get(slug) ?? [];
-      list.push({ index, url: photoUrl(slug, index, version, ext) });
-      bySlug.set(slug, list);
-    }
-
-    const result: Record<string, string[]> = {};
-    for (const [slug, entries] of bySlug) {
-      entries.sort((a, b) => a.index - b.index);
-      result[slug] = entries.map((e) => e.url);
-    }
-    return result;
-  } catch {
-    return {};
   }
 }
 
 export async function listUsedIndices(slug: string): Promise<number[]> {
   const kv = await getPhotosKv();
   if (!kv) return [];
-
-  const listed = await kv.list({ prefix: `cars/${slug}` });
-  const indices: number[] = [];
-  for (const key of listed.keys) {
-    const index = parseIndexFromKey(key.name, slug);
-    if (index !== null && index >= 0 && index < MAX_PHOTOS_PER_MODEL) {
-      indices.push(index);
-    }
-  }
-  return [...new Set(indices)].sort((a, b) => a - b);
+  const index = await readGalleryIndex(kv, slug);
+  return index.items.map((i) => i.index);
 }
 
 export async function putPhoto(
@@ -161,11 +214,13 @@ export async function putPhoto(
     throw new Error("Хранилище фото не подключено");
   }
 
+  const gallery = await readGalleryIndex(kv, slug);
+  const used = new Set(gallery.items.map((i) => i.index));
+
   let target = index;
   if (target === undefined) {
-    const used = await listUsedIndices(slug);
     target = 0;
-    while (used.includes(target) && target < MAX_PHOTOS_PER_MODEL) target += 1;
+    while (used.has(target) && target < MAX_PHOTOS_PER_MODEL) target += 1;
     if (target >= MAX_PHOTOS_PER_MODEL) {
       throw new Error(`Можно загрузить не больше ${MAX_PHOTOS_PER_MODEL} фото`);
     }
@@ -183,6 +238,10 @@ export async function putPhoto(
   };
 
   await kv.put(photoObjectKey(slug, target), data, { metadata: meta });
+
+  const nextItems = gallery.items.filter((i) => i.index !== target);
+  nextItems.push({ index: target, ext, updatedAt: meta.updatedAt });
+  await writeGalleryIndex(kv, slug, { items: nextItems });
 
   if (target === 0) {
     try {
@@ -211,6 +270,11 @@ export async function deletePhoto(slug: string, index: number): Promise<void> {
       /* ignore */
     }
   }
+
+  const gallery = await readGalleryIndex(kv, slug);
+  await writeGalleryIndex(kv, slug, {
+    items: gallery.items.filter((i) => i.index !== index),
+  });
 }
 
 export async function getPhoto(
