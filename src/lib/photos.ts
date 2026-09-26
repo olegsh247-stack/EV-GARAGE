@@ -68,15 +68,14 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     if (raw) {
       const parsed = JSON.parse(raw) as GalleryIndex;
       if (Array.isArray(parsed.items)) {
+        // Order in array = display order (do not sort by storage index)
         return {
-          items: parsed.items
-            .filter(
-              (item) =>
-                Number.isInteger(item.index) &&
-                item.index >= 0 &&
-                item.index < MAX_PHOTOS_PER_MODEL,
-            )
-            .sort((a, b) => a.index - b.index),
+          items: parsed.items.filter(
+            (item) =>
+              Number.isInteger(item.index) &&
+              item.index >= 0 &&
+              item.index < MAX_PHOTOS_PER_MODEL,
+          ),
         };
       }
     }
@@ -84,7 +83,6 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     /* rebuild below */
   }
 
-  // Rebuild from keys (legacy + indexed)
   const items: GalleryIndex["items"] = [];
   let cursor: string | undefined;
   do {
@@ -108,7 +106,6 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     cursor = listed.list_complete ? undefined : listed.cursor;
   } while (cursor);
 
-  // Legacy single key
   try {
     const legacy = await kv.getWithMetadata(legacyPhotoKey(slug), {
       type: "arrayBuffer",
@@ -124,6 +121,7 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     /* ignore */
   }
 
+  // Only when rebuilding from keys — sort by storage index once
   items.sort((a, b) => a.index - b.index);
   const indexDoc: GalleryIndex = { items };
   try {
@@ -135,7 +133,7 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
 }
 
 async function writeGalleryIndex(kv: PhotosKv, slug: string, index: GalleryIndex) {
-  index.items.sort((a, b) => a.index - b.index);
+  // Keep array order as display order
   await kv.put(galleryIndexKey(slug), JSON.stringify(index));
 }
 
@@ -158,7 +156,6 @@ export async function getPhotoMap(): Promise<Record<string, string>> {
       cursor = listed.list_complete ? undefined : listed.cursor;
     } while (cursor);
 
-    // Also scan legacy keys without index
     cursor = undefined;
     do {
       const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
@@ -202,6 +199,38 @@ export async function listUsedIndices(slug: string): Promise<number[]> {
   return index.items.map((i) => i.index);
 }
 
+export async function reorderPhotos(
+  slug: string,
+  order: number[],
+): Promise<void> {
+  const kv = await getPhotosKv();
+  if (!kv) {
+    throw new Error("Хранилище фото не подключено");
+  }
+  if (!/^[a-z0-9-]+$/i.test(slug)) {
+    throw new Error("Некорректная модель");
+  }
+
+  const gallery = await readGalleryIndex(kv, slug);
+  const byIndex = new Map(gallery.items.map((item) => [item.index, item]));
+
+  if (order.length !== gallery.items.length) {
+    throw new Error("Неверный порядок фото");
+  }
+
+  const seen = new Set<number>();
+  const next: GalleryIndex["items"] = [];
+  for (const idx of order) {
+    if (!Number.isInteger(idx) || seen.has(idx) || !byIndex.has(idx)) {
+      throw new Error("Неверный порядок фото");
+    }
+    seen.add(idx);
+    next.push(byIndex.get(idx)!);
+  }
+
+  await writeGalleryIndex(kv, slug, { items: next });
+}
+
 export async function putPhoto(
   slug: string,
   data: ArrayBuffer,
@@ -239,9 +268,14 @@ export async function putPhoto(
 
   await kv.put(photoObjectKey(slug, target), data, { metadata: meta });
 
-  const nextItems = gallery.items.filter((i) => i.index !== target);
-  nextItems.push({ index: target, ext, updatedAt: meta.updatedAt });
-  await writeGalleryIndex(kv, slug, { items: nextItems });
+  const existingPos = gallery.items.findIndex((i) => i.index === target);
+  const entry = { index: target, ext, updatedAt: meta.updatedAt };
+  if (existingPos >= 0) {
+    gallery.items[existingPos] = entry;
+  } else {
+    gallery.items.push(entry);
+  }
+  await writeGalleryIndex(kv, slug, gallery);
 
   if (target === 0) {
     try {
