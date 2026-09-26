@@ -73,50 +73,81 @@ export function PhotoGalleryEditor({
 }) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
 
-  async function upload(file: File, index?: number) {
+  async function uploadOne(file: File, index?: number): Promise<string> {
+    const prepared = await prepareImage(file);
+    const formData = new FormData();
+    formData.append("file", prepared);
+    formData.append("slug", slug);
+    if (index !== undefined) formData.append("index", String(index));
+
+    const response = await fetch("/api/photos/upload-fast", {
+      method: "POST",
+      body: formData,
+      credentials: "same-origin",
+    });
+    const data = (await response.json()) as {
+      url?: string;
+      index?: number;
+      error?: string;
+    };
+
+    if (!response.ok || !data.url) {
+      throw new Error(data.error || "Ошибка загрузки");
+    }
+
+    return `${data.url}&t=${Date.now()}`;
+  }
+
+  async function uploadMany(files: FileList | File[], replaceIndex?: number) {
     setBusy(true);
     setError("");
+    setProgress("");
+
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (list.length === 0) {
+      setBusy(false);
+      setError("Выберите изображения");
+      return;
+    }
+
     try {
-      const prepared = await prepareImage(file);
-      const formData = new FormData();
-      formData.append("file", prepared);
-      formData.append("slug", slug);
-      if (index !== undefined) formData.append("index", String(index));
-
-      const response = await fetch("/api/photos/upload-fast", {
-        method: "POST",
-        body: formData,
-        credentials: "same-origin",
-      });
-      const data = (await response.json()) as {
-        url?: string;
-        index?: number;
-        error?: string;
-      };
-
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || "Ошибка загрузки");
-      }
-
-      const url = `${data.url}&t=${Date.now()}`;
-      setPhotos((prev) => {
-        if (index !== undefined) {
+      if (replaceIndex !== undefined) {
+        const url = await uploadOne(list[0], replaceIndex);
+        setPhotos((prev) => {
           const next = [...prev];
-          const pos = next.findIndex((p) => indexFromUrl(p) === index);
+          const pos = next.findIndex((p) => indexFromUrl(p) === replaceIndex);
           if (pos >= 0) next[pos] = url;
           else next.push(url);
           return next.sort((a, b) => indexFromUrl(a) - indexFromUrl(b));
+        });
+      } else {
+        const freeSlots = MAX_PHOTOS_PER_MODEL - photos.length;
+        const batch = list.slice(0, freeSlots);
+        if (batch.length === 0) {
+          throw new Error(`Лимит ${MAX_PHOTOS_PER_MODEL} фото`);
         }
-        return [...prev, url].sort((a, b) => indexFromUrl(a) - indexFromUrl(b));
-      });
+        if (list.length > batch.length) {
+          setError(`Загружено ${batch.length} из ${list.length} (лимит ${MAX_PHOTOS_PER_MODEL})`);
+        }
+
+        for (let i = 0; i < batch.length; i++) {
+          setProgress(`${i + 1} / ${batch.length}`);
+          const url = await uploadOne(batch[i]);
+          setPhotos((prev) =>
+            [...prev, url].sort((a, b) => indexFromUrl(a) - indexFromUrl(b)),
+          );
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
+      setProgress("");
       replaceIndexRef.current = null;
       if (inputRef.current) inputRef.current.value = "";
     }
@@ -145,6 +176,7 @@ export function PhotoGalleryEditor({
   }
 
   const canAdd = photos.length < MAX_PHOTOS_PER_MODEL;
+  const isReplace = replaceIndexRef.current !== null;
 
   return (
     <div className="rounded-2xl border border-line bg-surface-card p-5">
@@ -155,6 +187,7 @@ export function PhotoGalleryEditor({
           </p>
           <p className="mt-1 text-sm text-ink-soft">
             {photos.length} / {MAX_PHOTOS_PER_MODEL}
+            {progress ? ` · ${progress}` : ""}
           </p>
         </div>
         <button
@@ -166,7 +199,7 @@ export function PhotoGalleryEditor({
           }}
           className="rounded-full border border-line px-4 py-2 text-xs font-medium text-ink transition-colors hover:border-charge hover:text-charge disabled:opacity-50"
         >
-          {busy ? "…" : canAdd ? "Добавить фото" : "Лимит 25"}
+          {busy ? "Загрузка…" : canAdd ? "Добавить фото" : "Лимит 25"}
         </button>
       </div>
 
@@ -176,19 +209,22 @@ export function PhotoGalleryEditor({
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        multiple={!isReplace}
         className="hidden"
         onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
+          const files = e.target.files;
+          if (!files?.length) return;
           const idx = replaceIndexRef.current;
-          void upload(file, idx === null ? undefined : idx);
+          void uploadMany(files, idx === null ? undefined : idx);
         }}
       />
 
       {photos.length === 0 ? (
         <div className="mt-4">
           <CarPhoto accent={accent} className="h-40 w-full rounded-xl" />
-          <p className="mt-2 text-xs text-ink-soft">Пока нет фото</p>
+          <p className="mt-2 text-xs text-ink-soft">
+            Пока нет фото. Можно выбрать сразу несколько файлов.
+          </p>
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
