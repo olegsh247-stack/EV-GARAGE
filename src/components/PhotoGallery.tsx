@@ -17,8 +17,8 @@ export function PhotoGallery({
   const count = photos.length;
 
   useEffect(() => {
-    setActive(0);
-  }, [photos]);
+    setActive((i) => (count === 0 ? 0 : Math.min(i, count - 1)));
+  }, [photos, count]);
 
   const go = useCallback(
     (dir: -1 | 1) => {
@@ -86,7 +86,7 @@ export function PhotoGallery({
       </div>
 
       {count > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
           {photos.map((url, i) => {
             const selected = i === active;
             return (
@@ -96,7 +96,7 @@ export function PhotoGallery({
                 onClick={() => setActive(i)}
                 aria-label={`Фото ${i + 1}`}
                 aria-current={selected ? "true" : undefined}
-                className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-colors sm:h-20 sm:w-24 ${
+                className={`aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
                   selected
                     ? "border-charge"
                     : "border-transparent opacity-80 hover:opacity-100"
