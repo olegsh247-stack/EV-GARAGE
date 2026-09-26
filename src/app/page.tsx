@@ -47,10 +47,9 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1">
-        {/* Brands — сразу с главной, без вступительного блока */}
-        <section id="brands" className="mx-auto max-w-[1400px] px-5 pb-16 pt-10">
-          <div className="mb-8 flex items-end justify-between">
+      <main className="min-w-0 flex-1">
+        <section id="brands" className="mx-auto w-full max-w-[1400px] px-5 pb-16 pt-10">
+          <div className="mb-8 flex items-end justify-between gap-3">
             <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               Выберите марку
             </h1>
@@ -68,8 +67,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Как это работает */}
-        <section id="about" className="mx-auto max-w-[1400px] px-5 py-16">
+        <section id="about" className="mx-auto w-full max-w-[1400px] px-5 py-16">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Как это работает
           </p>
@@ -79,7 +77,7 @@ export default async function Home() {
 
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, i) => (
-              <div key={step.title}>
+              <div key={step.title} className="min-w-0">
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-xs font-bold text-surface">
                     {i + 1}
@@ -97,8 +95,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Топ по параметрам */}
-        <section className="mx-auto max-w-[1400px] px-5 py-16">
+        <section className="mx-auto w-full max-w-[1400px] px-5 py-16">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Топ по параметрам
           </p>
@@ -117,7 +114,7 @@ export default async function Home() {
               return (
                 <div
                   key={list.title}
-                  className="rounded-2xl border border-line bg-surface-card p-5"
+                  className="min-w-0 rounded-2xl border border-line bg-surface-card p-5"
                 >
                   <h3 className="font-display text-base font-semibold text-ink">
                     {list.title}
@@ -131,17 +128,17 @@ export default async function Home() {
                             ? `/${item.trim.slug}`
                             : ""
                         }`}
-                        className="group flex items-center justify-between rounded-lg px-2 py-2 transition-colors hover:bg-surface"
+                        className="group flex min-w-0 items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-surface"
                       >
-                        <span className="flex items-center gap-2 text-sm text-ink">
-                          <span className="font-mono text-xs text-ink-soft">
+                        <span className="flex min-w-0 items-center gap-2 text-sm text-ink">
+                          <span className="shrink-0 font-mono text-xs text-ink-soft">
                             {i + 1}
                           </span>
-                          <span className="group-hover:text-charge">
+                          <span className="truncate group-hover:text-charge">
                             {item.brand.name} {item.model.name}
                           </span>
                         </span>
-                        <span className="font-mono text-xs text-ink-soft">
+                        <span className="shrink-0 font-mono text-xs text-ink-soft">
                           {list.read(item.trim as never)}
                         </span>
                       </Link>
@@ -153,8 +150,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Видеообзоры */}
-        <section className="mx-auto max-w-[1400px] px-5 py-16">
+        <section className="mx-auto w-full max-w-[1400px] px-5 py-16">
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Видеообзоры
           </p>
@@ -164,12 +160,12 @@ export default async function Home() {
 
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {videoReviews.map((v) => (
-              <div key={v.youtubeId}>
+              <div key={v.youtubeId} className="min-w-0">
                 <div className="aspect-video overflow-hidden rounded-2xl border border-line bg-surface-card">
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${v.youtubeId}`}
                     title={v.title}
-                    className="h-full w-full"
+                    className="h-full w-full max-w-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     loading="lazy"
