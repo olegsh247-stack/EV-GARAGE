@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CarPhoto } from "./CarPhoto";
 
@@ -14,11 +14,20 @@ export function PhotoGallery({
   alt?: string;
 }) {
   const [active, setActive] = useState(0);
+  const stripRef = useRef<HTMLDivElement>(null);
   const count = photos.length;
 
   useEffect(() => {
     setActive((i) => (count === 0 ? 0 : Math.min(i, count - 1)));
   }, [photos, count]);
+
+  // Keep active thumb in view when changing photo
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || count <= 1) return;
+    const thumb = strip.children[active] as HTMLElement | undefined;
+    thumb?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+  }, [active, count]);
 
   const go = useCallback(
     (dir: -1 | 1) => {
@@ -86,31 +95,36 @@ export function PhotoGallery({
       </div>
 
       {count > 1 && (
-        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
-          {photos.map((url, i) => {
-            const selected = i === active;
-            return (
-              <button
-                key={`${url}-${i}`}
-                type="button"
-                onClick={() => setActive(i)}
-                aria-label={`Фото ${i + 1}`}
-                aria-current={selected ? "true" : undefined}
-                className={`aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
-                  selected
-                    ? "border-charge"
-                    : "border-transparent opacity-80 hover:opacity-100"
-                }`}
-              >
-                <CarPhoto
-                  photoUrl={url}
-                  accent={accent}
-                  className="h-full w-full"
-                  alt=""
-                />
-              </button>
-            );
-          })}
+        <div className="relative mt-3">
+          <div
+            ref={stripRef}
+            className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {photos.map((url, i) => {
+              const selected = i === active;
+              return (
+                <button
+                  key={`${url}-${i}`}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  aria-label={`Фото ${i + 1}`}
+                  aria-current={selected ? "true" : undefined}
+                  className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-colors sm:h-20 sm:w-24 ${
+                    selected
+                      ? "border-charge"
+                      : "border-transparent opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  <CarPhoto
+                    photoUrl={url}
+                    accent={accent}
+                    className="h-full w-full"
+                    alt=""
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
