@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBrand } from "@/data/cars";
-import { getPhotoMap, photoKey } from "@/lib/photos";
+import { getPhotoGallery, photoKey } from "@/lib/photos";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 import { AdminNav } from "../../AdminNav";
 import { AdminModelCard } from "../../AdminModelCard";
@@ -16,10 +16,18 @@ export default async function AdminBrandPage({
   const brand = getBrand(brandSlug);
   if (!brand) notFound();
 
-  const [photoMap, archived] = await Promise.all([
-    getPhotoMap(),
-    getArchivedModelKeys(),
-  ]);
+  const archived = await getArchivedModelKeys();
+
+  const photoEntries = await Promise.all(
+    brand.models.map(async (model) => {
+      const key = photoKey(brand.slug, model.slug);
+      const gallery = await getPhotoGallery(key);
+      return [key, gallery[0] ?? ""] as const;
+    }),
+  );
+  const photoMap = Object.fromEntries(
+    photoEntries.filter(([, url]) => Boolean(url)),
+  );
 
   return (
     <div className="min-h-screen bg-surface px-5 py-10">
