@@ -176,7 +176,6 @@ export function PhotoGalleryEditor({
   }
 
   const canAdd = photos.length < MAX_PHOTOS_PER_MODEL;
-  const isReplace = replaceIndexRef.current !== null;
 
   return (
     <div className="rounded-2xl border border-line bg-surface-card p-5">
@@ -209,7 +208,7 @@ export function PhotoGalleryEditor({
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        multiple={!isReplace}
+        multiple
         className="hidden"
         onChange={(e) => {
           const files = e.target.files;
