@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { MAX_PHOTOS_PER_MODEL } from "@/lib/photoConstants";
 
-export const MAX_PHOTOS_PER_MODEL = 25;
+export { MAX_PHOTOS_PER_MODEL };
 
 export type PhotoMeta = {
   contentType: string;
@@ -29,7 +30,6 @@ function photoObjectKey(slug: string, index: number) {
   return `cars/${slug}/${index}`;
 }
 
-/** Legacy single-photo key from the first KV version. */
 function legacyPhotoKey(slug: string) {
   return `cars/${slug}`;
 }
@@ -58,7 +58,6 @@ function parseIndexFromKey(name: string, slug: string): number | null {
   return null;
 }
 
-/** First photo URL per model — for cards and lists. */
 export async function getPhotoMap(): Promise<Record<string, string>> {
   const galleries = await getAllGalleries();
   const map: Record<string, string> = {};
@@ -68,7 +67,6 @@ export async function getPhotoMap(): Promise<Record<string, string>> {
   return map;
 }
 
-/** All photo URLs for one model, ordered by index. */
 export async function getPhotoGallery(slug: string): Promise<string[]> {
   const kv = await getPhotosKv();
   if (!kv || !/^[a-z0-9-]+$/i.test(slug)) return [];
@@ -102,7 +100,6 @@ async function getAllGalleries(): Promise<Record<string, string[]>> {
     const bySlug = new Map<string, Array<{ index: number; url: string }>>();
 
     for (const key of listed.keys) {
-      // cars/{slug}/{i} or legacy cars/{slug}
       const parts = key.name.split("/");
       if (parts[0] !== "cars" || parts.length < 2) continue;
 
@@ -187,7 +184,6 @@ export async function putPhoto(
 
   await kv.put(photoObjectKey(slug, target), data, { metadata: meta });
 
-  // Drop legacy single key if we now use indexed keys
   if (target === 0) {
     try {
       await kv.delete(legacyPhotoKey(slug));
