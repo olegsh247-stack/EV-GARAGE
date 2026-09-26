@@ -6,14 +6,29 @@ export type PhotoMeta = {
   updatedAt: number;
 };
 
+type PhotosKv = {
+  list: (options: {
+    prefix?: string;
+  }) => Promise<{ keys: Array<{ name: string; metadata?: unknown }> }>;
+  put: (
+    key: string,
+    value: ArrayBuffer,
+    options?: { metadata?: PhotoMeta },
+  ) => Promise<void>;
+  getWithMetadata: (
+    key: string,
+    options: { type: "arrayBuffer" },
+  ) => Promise<{ value: ArrayBuffer | null; metadata: PhotoMeta | null }>;
+};
+
 function photoObjectKey(slug: string) {
   return `cars/${slug}`;
 }
 
-async function getPhotosKv() {
+async function getPhotosKv(): Promise<PhotosKv | null> {
   try {
     const { env } = await getCloudflareContext({ async: true });
-    return (env as { PHOTOS_KV?: KVNamespace }).PHOTOS_KV ?? null;
+    return ((env as { PHOTOS_KV?: PhotosKv }).PHOTOS_KV) ?? null;
   } catch {
     return null;
   }
@@ -70,7 +85,7 @@ export async function getPhoto(
   const kv = await getPhotosKv();
   if (!kv) return null;
 
-  const result = await kv.getWithMetadata<PhotoMeta>(photoObjectKey(slug), {
+  const result = await kv.getWithMetadata(photoObjectKey(slug), {
     type: "arrayBuffer",
   });
 
