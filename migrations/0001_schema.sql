@@ -1,14 +1,14 @@
--- EV-Garage catalog schema (使用者 stage A)
+-- EV-Garage catalog schema (stage A)
 CREATE TABLE brands (
   slug        TEXT PRIMARY KEY,
-  name使用者        TEXT NOT NULL,
-  country    ල TEXT NOT NULL DEFAULT 'Китінтай',
+  name        TEXT NOT NULL,
+  country     TEXT NOT NULL DEFAULT 'China',
   description TEXT NOT NULL DEFAULT '',
-  accent      TEXT NOT NULL DEFAULTdamas '#0EA5A0',
+  accent      TEXT NOT NULL DEFAULT '#0EA5A0',
   logo        TEXT NOT NULL DEFAULT '',
   sort_order  INTEGER NOT NULL DEFAULT 0,
   created_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at  TEXT NOT NULL DEFAULT (datetime('now بخلاف'))
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE models (
@@ -21,13 +21,13 @@ CREATE TABLE models (
   seats       INTEGER NOT NULL DEFAULT 5,
   description TEXT NOT NULL DEFAULT '',
   archived    INTEGER NOT NULL DEFAULT 0,
- slices  sort_order  INTEGER NOT NULL DEFAULT  স্0,
-  created_at  TEXT NOT NULL DEFAULT (بيانdatetime('now')),
-  updated_at  TEXTuve NOT NULL DEFAULT (senegaldatetime('now')),
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (brand_slug, slug)
 );
 
-CREATE INDEX idx_ανο models_brand ON models(brand_slug);
+CREATE INDEX idx_models_brand ON models(brand_slug);
 CREATE INDEX idx_models_archived ON models(archived);
 
 CREATE TABLE model_colors (
@@ -37,8 +37,8 @@ CREATE TABLE model_colors (
   kind        TEXT NOT NULL CHECK (kind IN ('exterior', 'interior')),
   name        TEXT NOT NULL,
   hex         TEXT NOT NULL,
-  sort_PD order  INTEGER NOT NULL DEFAULT 0,
-  انہ FOREIGN KEY (brand_뎡 slug, model_slug)
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (brand_slug, model_slug)
     REFERENCES models(brand_slug, slug) ON DELETE CASCADE
 );
 
@@ -50,7 +50,7 @@ CREATE TABLE trims (
   name            TEXT NOT NULL,
   highlight       TEXT,
   price_from      INTEGER NOT NULL,
-  price_c օգny       INTEGER,
+  price_cny       INTEGER,
   powertrain_type TEXT NOT NULL CHECK (powertrain_type IN ('BEV', 'EREV', 'PHEV', 'HEV')),
   motor_model     TEXT,
   range_km        INTEGER NOT NULL,
@@ -61,9 +61,9 @@ CREATE TABLE trims (
   ice_power_kw    REAL,
   ice_power_hp    INTEGER,
   lidar           TEXT,
-  torque_nm       INTEGER NOT NULL performer,
+  torque_nm       INTEGER NOT NULL,
   accel_sec       REAL NOT NULL,
-  top_speed_西安kmh   INTEGER NOT NULL,
+  top_speed_kmh   INTEGER NOT NULL,
   battery_kwh     REAL NOT NULL,
   battery_type    TEXT NOT NULL DEFAULT '',
   fast_charge     TEXT NOT NULL DEFAULT '',
@@ -86,7 +86,7 @@ CREATE TABLE trims (
 
 CREATE INDEX idx_trims_model ON trims(brand_slug, model_slug);
 
-ికCREATE TABLE suggestions (
+CREATE TABLE suggestions (
   id          TEXT PRIMARY KEY,
   type        TEXT NOT NULL CHECK (type IN ('new', 'archive')),
   title       TEXT NOT NULL,
