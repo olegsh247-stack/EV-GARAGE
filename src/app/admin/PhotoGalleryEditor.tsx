@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CarPhoto } from "@/components/CarPhoto";
 import { MAX_PHOTOS_PER_MODEL } from "@/lib/photoConstants";
 
@@ -90,13 +90,61 @@ export function PhotoGalleryEditor({
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
-  const [ok, setOk] = useState("");
+  const [savedFlash, setSavedFlash] = useState(false);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
+  const dragFromRef = useRef<number | null>(null);
+  const dragOverRef = useRef<number | null>(null);
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
 
   const dirty = orderKey(photos) !== savedKey;
+
+  useEffect(() => {
+    if (!savedFlash) return;
+    const t = window.setTimeout(() => setSavedFlash(false), 2500);
+    return () => window.clearTimeout(t);
+  }, [savedFlash]);
+
+  useEffect(() => {
+    if (dragFrom === null) return;
+
+    function onMove(e: PointerEvent) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const card = el?.closest("[data-photo-pos]") as HTMLElement | null;
+      if (!card) return;
+      const pos = Number(card.dataset.photoPos);
+      if (!Number.isInteger(pos)) return;
+      if (dragOverRef.current !== pos) {
+        dragOverRef.current = pos;
+        setDragOver(pos);
+      }
+    }
+
+    function onUp() {
+      const from = dragFromRef.current;
+      const to = dragOverRef.current;
+      dragFromRef.current = null;
+      dragOverRef.current = null;
+      setDragFrom(null);
+      setDragOver(null);
+      if (from === null || to === null || from === to) return;
+      setPhotos((prev) => moveItem(prev, from, to));
+      setSavedFlash(false);
+      setError("");
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragFrom]);
 
   async function uploadOne(file: File, index?: number): Promise<string> {
     const prepared = await prepareImage(file);
@@ -126,7 +174,7 @@ export function PhotoGalleryEditor({
   async function uploadMany(files: FileList | File[], replaceIndex?: number) {
     setBusy(true);
     setError("");
-    setOk("");
+    setSavedFlash(false);
     setProgress("");
 
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -179,7 +227,7 @@ export function PhotoGalleryEditor({
   async function remove(index: number) {
     setBusy(true);
     setError("");
-    setOk("");
+    setSavedFlash(false);
     try {
       const response = await fetch("/api/photos/delete", {
         method: "POST",
@@ -204,9 +252,10 @@ export function PhotoGalleryEditor({
   }
 
   async function handleSave() {
+    if (!dirty) return;
     setBusy(true);
     setError("");
-    setOk("");
+    setSavedFlash(false);
     try {
       const order = photos.map(indexFromUrl);
       const response = await fetch("/api/photos/reorder", {
@@ -220,7 +269,7 @@ export function PhotoGalleryEditor({
         throw new Error(data.error || "Не удалось сохранить");
       }
       setSavedKey(orderKey(photos));
-      setOk("Сохранено");
+      setSavedFlash(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка сохранения");
     } finally {
@@ -228,36 +277,14 @@ export function PhotoGalleryEditor({
     }
   }
 
-  function finishDrag(from: number, to: number) {
-    if (from === to || from < 0 || to < 0) {
-      setDragFrom(null);
-      setDragOver(null);
-      return;
-    }
-    setPhotos((prev) => moveItem(prev, from, to));
-    setOk("");
-    setDragFrom(null);
-    setDragOver(null);
-  }
-
-  function onPointerDown(e: React.PointerEvent, index: number) {
+  function startDrag(e: React.PointerEvent, pos: number) {
     if (busy) return;
     if ((e.target as HTMLElement).closest("button")) return;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    setDragFrom(index);
-    setDragOver(index);
-  }
-
-  function onPointerEnter(index: number) {
-    if (dragFrom === null) return;
-    setDragOver(index);
-  }
-
-  function onPointerUp() {
-    if (dragFrom === null) return;
-    const from = dragFrom;
-    const to = dragOver ?? dragFrom;
-    finishDrag(from, to);
+    e.preventDefault();
+    dragFromRef.current = pos;
+    dragOverRef.current = pos;
+    setDragFrom(pos);
+    setDragOver(pos);
   }
 
   const canAdd = photos.length < MAX_PHOTOS_PER_MODEL;
@@ -275,7 +302,7 @@ export function PhotoGalleryEditor({
           </p>
           {photos.length > 1 && (
             <p className="mt-1 text-[11px] text-ink-soft">
-              Перетащите фото, затем нажмите «Сохранить»
+              Перетащите фото, чтобы поменять порядок, затем «Сохранить»
             </p>
           )}
         </div>
@@ -295,15 +322,28 @@ export function PhotoGalleryEditor({
             type="button"
             disabled={busy || !dirty}
             onClick={() => void handleSave()}
-            className="rounded-full border border-ink bg-ink px-4 py-2 text-xs font-medium text-surface transition-opacity disabled:opacity-40"
+            className={`rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-40 ${
+              dirty
+                ? "border border-ink bg-ink text-surface hover:bg-deep"
+                : "border border-line bg-line/40 text-ink-soft"
+            }`}
           >
-            {busy ? "…" : "Сохранить"}
+            {busy && dirty ? "Сохраняю…" : "Сохранить порядок"}
           </button>
         </div>
       </div>
 
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
-      {ok && !error && <p className="mt-3 text-xs text-green-700">{ok}</p>}
+      {dirty && !error && (
+        <p className="mt-3 text-xs text-amber-700">
+          Порядок изменён — нажмите «Сохранить порядок»
+        </p>
+      )}
+      {savedFlash && !error && !dirty && (
+        <p className="mt-3 text-xs font-medium text-green-700">
+          Порядок сохранён
+        </p>
+      )}
 
       <input
         ref={inputRef}
@@ -321,13 +361,13 @@ export function PhotoGalleryEditor({
 
       {photos.length === 0 ? (
         <div className="mt-4">
-          <CarPhoto accent={accent} className="h-40 w-full rounded-xl" />
+          <CarPhoto accent={accent} className="aspect-[16/10] w-full rounded-xl" />
           <p className="mt-2 text-xs text-ink-soft">
             Пока нет фото. Можно выбрать сразу несколько файлов.
           </p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {photos.map((url, pos) => {
             const index = indexFromUrl(url);
             const isDragging = dragFrom === pos;
@@ -335,22 +375,24 @@ export function PhotoGalleryEditor({
             return (
               <div
                 key={url}
-                onPointerDown={(e) => onPointerDown(e, pos)}
-                onPointerEnter={() => onPointerEnter(pos)}
-                onPointerUp={onPointerUp}
-                onPointerCancel={() => {
-                  setDragFrom(null);
-                  setDragOver(null);
-                }}
-                className={`relative touch-none overflow-hidden rounded-xl border bg-surface select-none ${
+                data-photo-pos={pos}
+                onPointerDown={(e) => startDrag(e, pos)}
+                className={`relative overflow-hidden rounded-xl border bg-surface select-none ${
                   isDragging
-                    ? "border-charge opacity-60"
+                    ? "border-charge opacity-50"
                     : isOver
-                      ? "border-charge"
+                      ? "border-charge ring-2 ring-charge/30"
                       : "border-line"
                 } ${busy ? "pointer-events-none" : "cursor-grab active:cursor-grabbing"}`}
               >
-                <CarPhoto photoUrl={url} accent={accent} className="h-24 w-full pointer-events-none" />
+                <div className="pointer-events-none aspect-[16/10] w-full">
+                  <CarPhoto
+                    photoUrl={url}
+                    accent={accent}
+                    className="h-full w-full"
+                    fit="cover"
+                  />
+                </div>
                 <div className="flex border-t border-line">
                   <button
                     type="button"
@@ -359,7 +401,7 @@ export function PhotoGalleryEditor({
                       replaceIndexRef.current = index;
                       inputRef.current?.click();
                     }}
-                    className="flex-1 py-1.5 text-[10px] font-medium text-ink hover:text-charge disabled:opacity-50"
+                    className="flex-1 py-2 text-xs font-medium text-ink hover:text-charge disabled:opacity-50"
                   >
                     Заменить
                   </button>
@@ -367,7 +409,7 @@ export function PhotoGalleryEditor({
                     type="button"
                     disabled={busy}
                     onClick={() => void remove(index)}
-                    className="flex-1 border-l border-line py-1.5 text-[10px] font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    className="flex-1 border-l border-line py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
                     Удалить
                   </button>
