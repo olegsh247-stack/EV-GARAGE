@@ -68,7 +68,6 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     if (raw) {
       const parsed = JSON.parse(raw) as GalleryIndex;
       if (Array.isArray(parsed.items)) {
-        // Order in array = display order (do not sort by storage index)
         return {
           items: parsed.items.filter(
             (item) =>
@@ -121,7 +120,6 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
     /* ignore */
   }
 
-  // Only when rebuilding from keys — sort by storage index once
   items.sort((a, b) => a.index - b.index);
   const indexDoc: GalleryIndex = { items };
   try {
@@ -133,7 +131,6 @@ async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryInde
 }
 
 async function writeGalleryIndex(kv: PhotosKv, slug: string, index: GalleryIndex) {
-  // Keep array order as display order
   await kv.put(galleryIndexKey(slug), JSON.stringify(index));
 }
 
@@ -143,34 +140,33 @@ export async function getPhotoMap(): Promise<Record<string, string>> {
 
   try {
     const map: Record<string, string> = {};
+    const seenSlugs = new Set<string>();
+
     let cursor: string | undefined;
     do {
       const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
       for (const key of listed.keys) {
-        if (!key.name.endsWith("/_index")) continue;
-        const slug = key.name.slice("cars/".length, -"/_index".length);
-        if (!slug) continue;
-        const gallery = await getPhotoGallery(slug);
-        if (gallery[0]) map[slug] = gallery[0];
+        const name = key.name;
+        // cars/{slug}/_index | cars/{slug}/{n} | cars/{slug}
+        let slug: string | null = null;
+        if (name.endsWith("/_index")) {
+          slug = name.slice("cars/".length, -"/_index".length);
+        } else {
+          const m = name.match(/^cars\/([^/]+)(?:\/(\d+))?$/);
+          if (m) slug = m[1];
+        }
+        if (!slug || seenSlugs.has(slug)) continue;
+        seenSlugs.add(slug);
       }
       cursor = listed.list_complete ? undefined : listed.cursor;
     } while (cursor);
 
-    cursor = undefined;
-    do {
-      const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
-      for (const key of listed.keys) {
-        const parts = key.name.split("/");
-        if (parts.length === 2 && parts[0] === "cars") {
-          const slug = parts[1];
-          if (!map[slug]) {
-            const gallery = await getPhotoGallery(slug);
-            if (gallery[0]) map[slug] = gallery[0];
-          }
-        }
-      }
-      cursor = listed.list_complete ? undefined : listed.cursor;
-    } while (cursor);
+    await Promise.all(
+      [...seenSlugs].map(async (slug) => {
+        const gallery = await getPhotoGallery(slug);
+        if (gallery[0]) map[slug] = gallery[0];
+      }),
+    );
 
     return map;
   } catch {
