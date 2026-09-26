@@ -18,6 +18,10 @@ function indexFromUrl(url: string): number {
   return 0;
 }
 
+function orderKey(urls: string[]) {
+  return urls.map(indexFromUrl).join(",");
+}
+
 async function prepareImage(file: File): Promise<File> {
   if (file.size <= MAX_UPLOAD_BYTES && file.type === "image/jpeg") {
     return file;
@@ -82,14 +86,17 @@ export function PhotoGalleryEditor({
   initialPhotos: string[];
 }) {
   const [photos, setPhotos] = useState(initialPhotos);
+  const [savedKey, setSavedKey] = useState(() => orderKey(initialPhotos));
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const replaceIndexRef = useRef<number | null>(null);
-  const pointerIdRef = useRef<number | null>(null);
+
+  const dirty = orderKey(photos) !== savedKey;
 
   async function uploadOne(file: File, index?: number): Promise<string> {
     const prepared = await prepareImage(file);
@@ -119,6 +126,7 @@ export function PhotoGalleryEditor({
   async function uploadMany(files: FileList | File[], replaceIndex?: number) {
     setBusy(true);
     setError("");
+    setOk("");
     setProgress("");
 
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -136,6 +144,7 @@ export function PhotoGalleryEditor({
           const pos = next.findIndex((p) => indexFromUrl(p) === replaceIndex);
           if (pos >= 0) next[pos] = url;
           else next.push(url);
+          setSavedKey(orderKey(next));
           return next;
         });
       } else {
@@ -148,11 +157,14 @@ export function PhotoGalleryEditor({
           setError(`Загружено ${batch.length} из ${list.length} (лимит ${MAX_PHOTOS_PER_MODEL})`);
         }
 
+        let next = photos;
         for (let i = 0; i < batch.length; i++) {
           setProgress(`${i + 1} / ${batch.length}`);
           const url = await uploadOne(batch[i]);
-          setPhotos((prev) => [...prev, url]);
+          next = [...next, url];
+          setPhotos(next);
         }
+        setSavedKey(orderKey(next));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
@@ -167,6 +179,7 @@ export function PhotoGalleryEditor({
   async function remove(index: number) {
     setBusy(true);
     setError("");
+    setOk("");
     try {
       const response = await fetch("/api/photos/delete", {
         method: "POST",
@@ -178,7 +191,11 @@ export function PhotoGalleryEditor({
       if (!response.ok) {
         throw new Error(data.error || "Ошибка удаления");
       }
-      setPhotos((prev) => prev.filter((p) => indexFromUrl(p) !== index));
+      setPhotos((prev) => {
+        const next = prev.filter((p) => indexFromUrl(p) !== index);
+        setSavedKey(orderKey(next));
+        return next;
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка удаления");
     } finally {
@@ -186,48 +203,46 @@ export function PhotoGalleryEditor({
     }
   }
 
-  async function saveOrder(nextPhotos: string[]) {
-    const order = nextPhotos.map(indexFromUrl);
-    const response = await fetch("/api/photos/reorder", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, order }),
-    });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      throw new Error(data.error || "Не удалось сохранить порядок");
-    }
-  }
-
-  async function finishDrag(from: number, to: number) {
-    if (from === to || from < 0 || to < 0) {
-      setDragFrom(null);
-      setDragOver(null);
-      return;
-    }
-    const next = moveItem(photos, from, to);
-    const prev = photos;
-    setPhotos(next);
-    setDragFrom(null);
-    setDragOver(null);
+  async function handleSave() {
     setBusy(true);
     setError("");
+    setOk("");
     try {
-      await saveOrder(next);
+      const order = photos.map(indexFromUrl);
+      const response = await fetch("/api/photos/reorder", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, order }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Не удалось сохранить");
+      }
+      setSavedKey(orderKey(photos));
+      setOk("Сохранено");
     } catch (e) {
-      setPhotos(prev);
-      setError(e instanceof Error ? e.message : "Ошибка сортировки");
+      setError(e instanceof Error ? e.message : "Ошибка сохранения");
     } finally {
       setBusy(false);
     }
   }
 
+  function finishDrag(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) {
+      setDragFrom(null);
+      setDragOver(null);
+      return;
+    }
+    setPhotos((prev) => moveItem(prev, from, to));
+    setOk("");
+    setDragFrom(null);
+    setDragOver(null);
+  }
+
   function onPointerDown(e: React.PointerEvent, index: number) {
     if (busy) return;
-    // Don't start drag from buttons
     if ((e.target as HTMLElement).closest("button")) return;
-    pointerIdRef.current = e.pointerId;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setDragFrom(index);
     setDragOver(index);
@@ -242,15 +257,14 @@ export function PhotoGalleryEditor({
     if (dragFrom === null) return;
     const from = dragFrom;
     const to = dragOver ?? dragFrom;
-    pointerIdRef.current = null;
-    void finishDrag(from, to);
+    finishDrag(from, to);
   }
 
   const canAdd = photos.length < MAX_PHOTOS_PER_MODEL;
 
   return (
     <div className="rounded-2xl border border-line bg-surface-card p-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Фото модели
@@ -261,24 +275,35 @@ export function PhotoGalleryEditor({
           </p>
           {photos.length > 1 && (
             <p className="mt-1 text-[11px] text-ink-soft">
-              Перетащите фото, чтобы изменить порядок
+              Перетащите фото, затем нажмите «Сохранить»
             </p>
           )}
         </div>
-        <button
-          type="button"
-          disabled={busy || !canAdd}
-          onClick={() => {
-            replaceIndexRef.current = null;
-            inputRef.current?.click();
-          }}
-          className="rounded-full border border-line px-4 py-2 text-xs font-medium text-ink transition-colors hover:border-charge hover:text-charge disabled:opacity-50"
-        >
-          {busy ? "Загрузка…" : canAdd ? "Добавить фото" : "Лимит 25"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy || !canAdd}
+            onClick={() => {
+              replaceIndexRef.current = null;
+              inputRef.current?.click();
+            }}
+            className="rounded-full border border-line px-4 py-2 text-xs font-medium text-ink transition-colors hover:border-charge hover:text-charge disabled:opacity-50"
+          >
+            {canAdd ? "Добавить фото" : "Лимит 25"}
+          </button>
+          <button
+            type="button"
+            disabled={busy || !dirty}
+            onClick={() => void handleSave()}
+            className="rounded-full border border-ink bg-ink px-4 py-2 text-xs font-medium text-surface transition-opacity disabled:opacity-40"
+          >
+            {busy ? "…" : "Сохранить"}
+          </button>
+        </div>
       </div>
 
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+      {ok && !error && <p className="mt-3 text-xs text-green-700">{ok}</p>}
 
       <input
         ref={inputRef}
