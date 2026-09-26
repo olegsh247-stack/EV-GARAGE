@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { CarPhoto } from "@/components/CarPhoto";
-import { MAX_PHOTOS_PER_MODEL } from "@/lib/photos";
+import { MAX_PHOTOS_PER_MODEL } from "@/lib/photoConstants";
 
 const MAX_UPLOAD_BYTES = 4_000_000;
 const MAX_IMAGE_SIZE = 1800;
