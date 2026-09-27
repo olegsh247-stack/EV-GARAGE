@@ -7,18 +7,38 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CarPhoto } from "@/components/CarPhoto";
 import { useCompare, COMPARE_MAX } from "@/lib/compareContext";
-import { getTrim, fullSpecRows } from "@/data/cars";
+import { fullSpecRows, type Brand, type Model, type Trim } from "@/data/cars";
 import { photoKey } from "@/lib/photos";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
+
+function findTrim(
+  brands: Brand[],
+  brandSlug: string,
+  modelSlug: string,
+  trimSlug: string,
+): { brand: Brand; model: Model; trim: Trim } | null {
+  const brand = brands.find((b) => b.slug === brandSlug);
+  if (!brand) return null;
+  const model = brand.models.find((m) => m.slug === modelSlug);
+  if (!model) return null;
+  const trim = model.trims.find((t) => t.slug === trimSlug);
+  if (!trim) return null;
+  return { brand, model, trim };
+}
 
 export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
   const [photoMap, setPhotoMap] = useState<Record<string, string>>({});
   const [cnyRate, setCnyRate] = useState<number | null>(null);
   const [archivedKeys, setArchivedKeys] = useState<Set<string>>(new Set());
+  const [brands, setBrands] = useState<Brand[] | null>(null);
 
   useEffect(() => {
+    fetch("/api/catalog")
+      .then((r) => r.json())
+      .then((d: { brands: Brand[] }) => setBrands(d.brands ?? []))
+      .catch(() => setBrands([]));
     fetch("/api/photos")
       .then((r) => r.json())
       .then(setPhotoMap)
@@ -35,13 +55,16 @@ export default function ComparePage() {
       .catch(() => {});
   }, []);
 
-  const items = ids
-    .map((id) => {
-      const [brandSlug, modelSlug, trimSlug] = id.split("/");
-      const found = getTrim(brandSlug, modelSlug, trimSlug);
-      return found ? { id, ...found } : null;
-    })
-    .filter((x): x is NonNullable<typeof x> => x !== null);
+  const items =
+    brands === null
+      ? []
+      : ids
+          .map((id) => {
+            const [brandSlug, modelSlug, trimSlug] = id.split("/");
+            const found = findTrim(brands, brandSlug, modelSlug, trimSlug);
+            return found ? { id, ...found } : null;
+          })
+          .filter((x): x is NonNullable<typeof x> => x !== null);
 
   const rowLabels =
     items[0]?.model && items[0]?.trim
@@ -59,9 +82,11 @@ export default function ComparePage() {
                 Сравнение
               </p>
               <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink">
-                {items.length > 0
-                  ? `${items.length} из ${COMPARE_MAX} версий`
-                  : "Пока нечего сравнивать"}
+                {brands === null
+                  ? "Загрузка…"
+                  : items.length > 0
+                    ? `${items.length} из ${COMPARE_MAX} версий`
+                    : "Пока нечего сравнивать"}
               </h1>
             </div>
             {items.length > 0 && (
@@ -76,7 +101,13 @@ export default function ComparePage() {
           </div>
         </section>
 
-        {items.length === 0 ? (
+        {brands === null ? (
+          <section className="mx-auto max-w-[1400px] px-5 pb-24">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-line bg-surface-card py-20 text-center">
+              <p className="text-sm text-ink-soft">Загрузка каталога…</p>
+            </div>
+          </section>
+        ) : items.length === 0 ? (
           <section className="mx-auto max-w-[1400px] px-5 pb-24">
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-line bg-surface-card py-20 text-center">
               <Scale size={28} className="text-ink-soft" />
@@ -165,7 +196,7 @@ export default function ComparePage() {
                           key={id}
                           className="whitespace-nowrap px-5 py-4 font-mono text-ink"
                         >
-                          {fullSpecRows(model, trim)[i].value}
+                          {fullSpecRows(model, trim)[i]?.value ?? "—"}
                         </td>
                       ))}
                     </tr>
