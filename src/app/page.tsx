@@ -3,7 +3,7 @@ import { ClipboardList, MessageCircle, Truck, KeyRound } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BrandCard } from "@/components/BrandCard";
-import { brands, topModelsBy } from "@/data/cars";
+import { getBrands, topModelsBy } from "@/lib/catalog";
 import { getAllVideos } from "@/lib/videosStore";
 import { formatPrice } from "@/lib/format";
 import { totalPrice } from "@/lib/pricing";
@@ -34,14 +34,29 @@ const steps = [
 ];
 
 export default async function Home() {
-  const cnyRate = await getCnyRubRate();
-  const archived = await getArchivedModelKeys();
-  const videoReviews = await getAllVideos();
+  const [cnyRate, archived, videoReviews, brands] = await Promise.all([
+    getCnyRubRate(),
+    getArchivedModelKeys(),
+    getAllVideos(),
+    getBrands(),
+  ]);
 
   const topLists = [
-    { title: "Топ по запасу хода", metric: "range" as const, unit: "км", read: (t: { rangeKm: number }) => `${t.rangeKm} км` },
-    { title: "Самые доступные", metric: "price" as const, unit: "₽", read: (t: Parameters<typeof totalPrice>[0]) => formatPrice(totalPrice(t, cnyRate)) },
-    { title: "Быстрее всех разгоняются", metric: "accel" as const, unit: "с", read: (t: { accelSec: number }) => `${t.accelSec} с 0–100` },
+    {
+      title: "Топ по запасу хода",
+      items: await topModelsBy("range", 8),
+      read: (t: { rangeKm: number }) => `${t.rangeKm} км`,
+    },
+    {
+      title: "Самые доступные",
+      items: await topModelsBy("price", 8),
+      read: (t: Parameters<typeof totalPrice>[0]) => formatPrice(totalPrice(t, cnyRate)),
+    },
+    {
+      title: "Быстрее всех разгоняются",
+      items: await topModelsBy("accel", 8),
+      read: (t: { accelSec: number }) => `${t.accelSec} с 0–100`,
+    },
   ];
 
   return (
@@ -105,7 +120,7 @@ export default async function Home() {
 
           <div className="mt-8 grid gap-5 sm:grid-cols-3">
             {topLists.map((list) => {
-              const items = topModelsBy(list.metric, 8)
+              const items = list.items
                 .filter(
                   (item) =>
                     !archived.has(modelKey(item.brand.slug, item.model.slug))

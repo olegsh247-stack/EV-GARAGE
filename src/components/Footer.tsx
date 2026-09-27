@@ -1,9 +1,9 @@
 import { getContact } from "@/lib/contactStore";
-import { brands } from "@/data/cars";
+import { getBrands } from "@/lib/catalog";
 import Link from "next/link";
 
 export async function Footer() {
-  const contact = await getContact();
+  const [contact, brands] = await Promise.all([getContact(), getBrands()]);
 
   return (
     <footer id="contacts" className="mt-24 border-t border-line bg-deep text-surface">
