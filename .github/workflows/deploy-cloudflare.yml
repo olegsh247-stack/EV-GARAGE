@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      cloudflare_api_token:
+        description: "Cloudflare API Token (вставь сюда, если Secrets пустые)"
+        required: false
+        type: string
+      cloudflare_account_id:
+        description: "Cloudflare Account ID"
+        required: false
+        type: string
+        default: "014e0964322f6dcdccc71c59ea49b0ff"
 
 jobs:
   deploy:
@@ -33,11 +43,12 @@ jobs:
 
       - name: Deploy to Cloudflare
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token || secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id || secrets.CLOUDFLARE_ACCOUNT_ID || '014e0964322f6dcdccc71c59ea49b0ff' }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "CLOUDFLARE_API_TOKEN secret is missing — artifact uploaded for manual deploy"
-            exit 0
+            echo "Нет токена: укажи cloudflare_api_token при Run workflow или добавь Secret CLOUDFLARE_API_TOKEN"
+            exit 1
           fi
+          echo "Account: $CLOUDFLARE_ACCOUNT_ID"
           npx opennextjs-cloudflare deploy
