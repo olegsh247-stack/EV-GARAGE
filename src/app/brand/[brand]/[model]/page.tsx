@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { TrimDetailView } from "@/components/TrimDetailView";
-import { brands, getModel, baseTrim } from "@/data/cars";
+import { brands } from "@/data/cars";
+import { getModel, baseTrim } from "@/lib/catalog";
 
 export const revalidate = 30;
 
@@ -18,7 +19,7 @@ export default async function ModelPage({
   params: Promise<{ brand: string; model: string }>;
 }) {
   const { brand: brandSlug, model: modelSlug } = await params;
-  const found = getModel(brandSlug, modelSlug);
+  const found = await getModel(brandSlug, modelSlug);
   if (!found) notFound();
   const { brand, model } = found;
   const trim = baseTrim(model);

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { getModel, baseTrim } from "@/data/cars";
+import { getModel, baseTrim } from "@/lib/catalog";
 import { getPhotoGallery, photoKey } from "@/lib/photos";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 import { getVideosForModel } from "@/lib/videosStore";
@@ -19,7 +19,7 @@ export default async function AdminModelPage({
   params: Promise<{ brand: string; model: string }>;
 }) {
   const { brand: brandSlug, model: modelSlug } = await params;
-  const found = getModel(brandSlug, modelSlug);
+  const found = await getModel(brandSlug, modelSlug);
   if (!found) notFound();
   const { brand, model } = found;
   const key = photoKey(brand.slug, model.slug);

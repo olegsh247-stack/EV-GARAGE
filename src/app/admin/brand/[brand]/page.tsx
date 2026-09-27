@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBrand } from "@/data/cars";
+import { getBrand } from "@/lib/catalog";
 import { getPhotoGallery, photoKey } from "@/lib/photos";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 import { AdminNav } from "../../AdminNav";
@@ -13,7 +13,7 @@ export default async function AdminBrandPage({
   params: Promise<{ brand: string }>;
 }) {
   const { brand: brandSlug } = await params;
-  const brand = getBrand(brandSlug);
+  const brand = await getBrand(brandSlug);
   if (!brand) notFound();
 
   const archived = await getArchivedModelKeys();

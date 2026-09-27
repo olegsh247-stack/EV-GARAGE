@@ -1,4 +1,4 @@
-import { brands } from "@/data/cars";
+import { getBrands } from "@/lib/catalog";
 import { suggestions } from "@/data/suggestions";
 import { getSuggestionStatuses } from "@/lib/suggestionStatus";
 import { AdminNav } from "./AdminNav";
@@ -8,7 +8,10 @@ import { SuggestionActions } from "./SuggestionActions";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const statuses = await getSuggestionStatuses();
+  const [statuses, brands] = await Promise.all([
+    getSuggestionStatuses(),
+    getBrands(),
+  ]);
   const pending = suggestions.filter(
     (s) => (statuses[s.id] ?? "pending") === "pending"
   );
@@ -44,29 +47,13 @@ export default async function AdminPage() {
               {pending.map((s) => (
                 <div key={s.id} className="flex flex-col gap-3 px-5 py-4">
                   <div>
-                    <span
-                      className={`mr-2 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase ${
-                        s.type === "new"
-                          ? "bg-charge/10 text-charge"
-                          : "bg-amber-50 text-amber-800"
-                      }`}
-                    >
-                      {s.type === "new" ? "Новинка" : "На архив"}
+                    <span className="mr-2 rounded-full bg-charge/10 px-2 py-0.5 font-mono text-[10px] uppercase text-charge">
+                      {s.type === "new" ? "Новинка" : "Архив"}
                     </span>
                     <span className="font-display font-semibold text-ink">
                       {s.title}
                     </span>
                     <p className="mt-1 text-sm text-ink-soft">{s.note}</p>
-                    {s.sourceUrl && (
-                      <a
-                        href={s.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 inline-block font-mono text-xs text-charge hover:underline"
-                      >
-                        Источник →
-                      </a>
-                    )}
                   </div>
                   <SuggestionActions
                     id={s.id}
