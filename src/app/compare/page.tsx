@@ -27,6 +27,20 @@ function findTrim(
   return { brand, model, trim };
 }
 
+async function loadBrands(): Promise<Brand[]> {
+  for (const url of ["/api/brands", "/api/catalog"]) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = (await r.json()) as { brands?: Brand[] };
+      if (Array.isArray(d.brands)) return d.brands;
+    } catch {
+      /* try next */
+    }
+  }
+  return [];
+}
+
 export default function ComparePage() {
   const { ids, remove, clear } = useCompare();
   const [photoMap, setPhotoMap] = useState<Record<string, string>>({});
@@ -35,10 +49,7 @@ export default function ComparePage() {
   const [brands, setBrands] = useState<Brand[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/catalog")
-      .then((r) => r.json())
-      .then((d: { brands: Brand[] }) => setBrands(d.brands ?? []))
-      .catch(() => setBrands([]));
+    loadBrands().then(setBrands);
     fetch("/api/photos")
       .then((r) => r.json())
       .then(setPhotoMap)
