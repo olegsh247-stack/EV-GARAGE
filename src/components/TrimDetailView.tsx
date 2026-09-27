@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Brand, Model, Trim } from "@/data/cars";
-import { fullSpecRows, similarTrims, RANGE_SCALE_MAX } from "@/data/cars";
+import { fullSpecRows, RANGE_SCALE_MAX } from "@/data/cars";
+import { similarTrims } from "@/lib/catalog";
 import { CarPhoto } from "./CarPhoto";
 import { PhotoGallery } from "./PhotoGallery";
 import { ChargeBar } from "./ChargeBar";
@@ -28,10 +29,11 @@ export async function TrimDetailView({
   const cnyRate = await getCnyRubRate();
   const price = fullPriceBreakdown(trim, cnyRate);
   const key = photoKey(brand.slug, model.slug);
-  const [photoMap, gallery, archived] = await Promise.all([
+  const [photoMap, gallery, archived, similar] = await Promise.all([
     getPhotoMap(),
     getPhotoGallery(key),
     getArchivedModelKeys(),
+    similarTrims(model.slug, trim.priceFrom, 6),
   ]);
   const isArchived = archived.has(modelKey(brand.slug, model.slug));
 
@@ -216,7 +218,7 @@ export async function TrimDetailView({
                 Похожие версии
               </p>
               <div className="mt-3 flex flex-col gap-2">
-                {similarTrims(model.slug, trim.priceFrom, 6)
+                {similar
                   .filter(
                     (s) => !archived.has(modelKey(s.brand.slug, s.model.slug))
                   )
