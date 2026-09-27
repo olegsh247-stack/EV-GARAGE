@@ -14,6 +14,13 @@
       "id": "cf7115bd641c46a086f7b5a09c4dd421"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ev-garage",
+      "database_id": "f95d9459-b2e0-4306-9a31-c8ab89e0e016"
+    }
+  ],
   "observability": {
     "enabled": true
   }
