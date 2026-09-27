@@ -11,7 +11,7 @@ import {
 import { loadBrandsFromD1 } from "@/lib/catalogDb";
 
 export type { Brand, Model, Trim };
-export { fullSpecRows, RANGE_SCALE_MAX, POWERTRAIN_LABELS, baseTrimSync as baseTrim };
+export { fullSpecRows, RANGE_SCALE_MAX, POWERTRAIN_LABELS };
 
 let cache: { at: number; brands: Brand[] } | null = null;
 const CACHE_MS = 15_000;
