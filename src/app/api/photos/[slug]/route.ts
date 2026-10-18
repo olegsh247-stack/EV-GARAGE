@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jsonError } from "@/lib/apiError";
 import { getPhoto } from "@/lib/photos";
 
 export async function GET(
@@ -25,7 +26,7 @@ export async function GET(
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
-  } catch {
-    return new NextResponse(null, { status: 404 });
+  } catch (error) {
+    return jsonError(error, "photos");
   }
 }

@@ -2,22 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { TrimDetailView } from "@/components/TrimDetailView";
-import { brands } from "@/data/cars";
 import { getTrim, baseTrim } from "@/lib/catalog";
 
-export const revalidate = 30;
-
-export function generateStaticParams() {
-  return brands.flatMap((b) =>
-    b.models.flatMap((m) => {
-      if (m.trims.length <= 1) return [];
-      const base = baseTrim(m);
-      return m.trims
-        .filter((t) => t.slug !== base.slug)
-        .map((t) => ({ brand: b.slug, model: m.slug, trim: t.slug }));
-    })
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default async function TrimPage({
   params,

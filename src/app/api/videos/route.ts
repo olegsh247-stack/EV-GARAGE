@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jsonError } from "@/lib/apiError";
 import { addVideo, removeVideo, extractYoutubeId } from "@/lib/videosStore";
 
 export async function POST(req: NextRequest) {
@@ -20,15 +21,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await addVideo({
-    youtubeId,
-    title: typeof title === "string" && title ? title : "Видеообзор",
-    channel: "Добавлено вручную",
-    brandSlug,
-    modelSlug,
-  });
-
-  return NextResponse.json({ ok: true, youtubeId });
+  try {
+    await addVideo({
+      youtubeId,
+      title: typeof title === "string" && title ? title : "Видеообзор",
+      channel: "Добавлено вручную",
+      brandSlug,
+      modelSlug,
+    });
+    return NextResponse.json({ ok: true, youtubeId });
+  } catch (error) {
+    return jsonError(error, "videos");
+  }
 }
 
 export async function DELETE(req: NextRequest) {
@@ -42,6 +46,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 });
   }
 
-  await removeVideo(brandSlug, modelSlug, youtubeId);
-  return NextResponse.json({ ok: true });
+  try {
+    await removeVideo(brandSlug, modelSlug, youtubeId);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return jsonError(error, "videos");
+  }
 }

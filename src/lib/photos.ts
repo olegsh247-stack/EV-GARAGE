@@ -1,7 +1,16 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { MAX_PHOTOS_PER_MODEL } from "@/lib/photoConstants";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { HttpError } from "@/lib/httpError";
+import {
+  MAX_PHOTOS_PER_MODEL,
+  MAX_UPLOAD_BYTES,
+  PHOTO_EXT_BY_TYPE,
+  photoKey,
+  type PhotoContentType,
+} from "@/lib/photoConstants";
+import { query, withTransaction } from "@/lib/pg";
 
-export { MAX_PHOTOS_PER_MODEL };
+export { MAX_PHOTOS_PER_MODEL, photoKey };
 
 export type PhotoMeta = {
   contentType: string;
@@ -10,221 +19,201 @@ export type PhotoMeta = {
   index: number;
 };
 
-type GalleryIndex = {
-  items: Array<{ index: number; ext: string; updatedAt: number }>;
+type PhotoRow = {
+  photo_key: string;
+  photo_index: number;
+  sort_position: number;
+  object_key: string;
+  content_type: string;
+  ext: string;
+  byte_size: number;
+  updated_at: Date;
 };
 
-type PhotosKv = {
-  list: (options: {
-    prefix?: string;
-    limit?: number;
-    cursor?: string;
-  }) => Promise<{
-    keys: Array<{ name: string; metadata?: unknown }>;
-    list_complete: boolean;
-    cursor?: string;
-  }>;
-  put: (
-    key: string,
-    value: ArrayBuffer | string,
-    options?: { metadata?: PhotoMeta },
-  ) => Promise<void>;
-  get: (key: string, options?: { type: "text" | "json" }) => Promise<string | null>;
-  getWithMetadata: (
-    key: string,
-    options: { type: "arrayBuffer" },
-  ) => Promise<{ value: ArrayBuffer | null; metadata: PhotoMeta | null }>;
-  delete: (key: string) => Promise<void>;
-};
-
-function photoObjectKey(slug: string, index: number) {
-  return `cars/${slug}/${index}`;
+function isSlug(slug: string) {
+  return /^[a-z0-9-]+$/i.test(slug);
 }
 
-function galleryIndexKey(slug: string) {
-  return `cars/${slug}/_index`;
+function photosRoot() {
+  const dir = process.env.PHOTOS_DIR?.trim();
+  if (!dir) throw new Error("PHOTOS_DIR is not set");
+  return path.resolve(dir);
 }
 
-function legacyPhotoKey(slug: string) {
-  return `cars/${slug}`;
+function objectKeyFor(slug: string, index: number, ext: string) {
+  return `photos/${slug}/${index}.${ext}`;
+}
+
+function resolveSafe(objectKey: string) {
+  const root = photosRoot();
+  const parts = objectKey.split("/").filter((part) => part && part !== "." && part !== "..");
+  const full = path.resolve(root, ...parts);
+  const relative = path.relative(root, full);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("Некорректный путь фото");
+  }
+  return full;
 }
 
 function photoUrl(slug: string, index: number, version: number, ext: string) {
   return `/api/photos/${encodeURIComponent(slug)}?i=${index}&ext=${ext}&v=${version}`;
 }
 
-async function getPhotosKv(): Promise<PhotosKv | null> {
-  try {
-    const { env } = await getCloudflareContext({ async: true });
-    return (env as { PHOTOS_KV?: PhotosKv }).PHOTOS_KV ?? null;
-  } catch {
-    return null;
-  }
+function toMillis(value: Date | string) {
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? Date.now() : ms;
 }
 
-async function readGalleryIndex(kv: PhotosKv, slug: string): Promise<GalleryIndex> {
+function extensionFor(contentType: string, ext: string) {
+  const expected = PHOTO_EXT_BY_TYPE[contentType as PhotoContentType];
+  if (!expected || expected !== ext) {
+    throw new HttpError("Разрешены только JPG, PNG или WEBP", 400);
+  }
+  return expected;
+}
+
+async function placeFile(objectKey: string, data: Buffer) {
+  const finalPath = resolveSafe(objectKey);
+  const partialPath = `${finalPath}.partial`;
+  const backupPath = `${finalPath}.bak`;
+  await fs.mkdir(path.dirname(finalPath), { recursive: true });
+  await fs.writeFile(partialPath, data);
+
+  let replaced = false;
   try {
-    const raw = await kv.get(galleryIndexKey(slug), { type: "text" });
-    if (raw) {
-      const parsed = JSON.parse(raw) as GalleryIndex;
-      if (Array.isArray(parsed.items)) {
-        return {
-          items: parsed.items.filter(
-            (item) =>
-              Number.isInteger(item.index) &&
-              item.index >= 0 &&
-              item.index < MAX_PHOTOS_PER_MODEL,
-          ),
-        };
+    try {
+      await fs.rename(finalPath, backupPath);
+      replaced = true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    await fs.rename(partialPath, finalPath);
+  } catch (error) {
+    if (replaced) {
+      await fs.rename(backupPath, finalPath).catch((restoreError) => {
+        console.error(
+          "[photos] failed to restore previous object",
+          objectKey,
+          (restoreError as Error).message,
+        );
+      });
+    }
+    await fs.rm(partialPath, { force: true }).catch((cleanupError) => {
+      console.error(
+        "[photos] failed to remove partial upload",
+        objectKey,
+        (cleanupError as Error).message,
+      );
+    });
+    throw error;
+  }
+
+  return {
+    async commit() {
+      if (replaced) {
+        await fs.rm(backupPath, { force: true }).catch((error) => {
+          console.error(
+            "[photos] failed to remove backup",
+            objectKey,
+            (error as Error).message,
+          );
+        });
       }
-    }
-  } catch {
-    /* rebuild below */
-  }
-
-  const items: GalleryIndex["items"] = [];
-  let cursor: string | undefined;
-  do {
-    const listed = await kv.list({
-      prefix: `cars/${slug}/`,
-      limit: 100,
-      cursor,
-    });
-    for (const key of listed.keys) {
-      if (key.name.endsWith("/_index")) continue;
-      const rest = key.name.slice(`cars/${slug}/`.length);
-      if (!/^\d+$/.test(rest)) continue;
-      const index = Number(rest);
-      const meta = (key.metadata ?? {}) as Partial<PhotoMeta>;
-      items.push({
-        index,
-        ext: meta.ext ?? "jpg",
-        updatedAt: meta.updatedAt ?? Date.now(),
+    },
+    async rollback() {
+      await fs.rm(finalPath, { force: true }).catch((error) => {
+        console.error(
+          "[photos] failed to remove new object",
+          objectKey,
+          (error as Error).message,
+        );
       });
-    }
-    cursor = listed.list_complete ? undefined : listed.cursor;
-  } while (cursor);
-
-  try {
-    const legacy = await kv.getWithMetadata(legacyPhotoKey(slug), {
-      type: "arrayBuffer",
-    });
-    if (legacy.value && !items.some((i) => i.index === 0)) {
-      items.push({
-        index: 0,
-        ext: legacy.metadata?.ext ?? "jpg",
-        updatedAt: legacy.metadata?.updatedAt ?? Date.now(),
-      });
-    }
-  } catch {
-    /* ignore */
-  }
-
-  items.sort((a, b) => a.index - b.index);
-  const indexDoc: GalleryIndex = { items };
-  try {
-    await kv.put(galleryIndexKey(slug), JSON.stringify(indexDoc));
-  } catch {
-    /* ignore */
-  }
-  return indexDoc;
-}
-
-async function writeGalleryIndex(kv: PhotosKv, slug: string, index: GalleryIndex) {
-  await kv.put(galleryIndexKey(slug), JSON.stringify(index));
+      if (replaced) {
+        await fs.rename(backupPath, finalPath).catch((error) => {
+          console.error(
+            "[photos] failed to restore previous object",
+            objectKey,
+            (error as Error).message,
+          );
+        });
+      }
+    },
+  };
 }
 
 export async function getPhotoMap(): Promise<Record<string, string>> {
-  const kv = await getPhotosKv();
-  if (!kv) return {};
-
-  try {
-    const map: Record<string, string> = {};
-    const seenSlugs = new Set<string>();
-
-    let cursor: string | undefined;
-    do {
-      const listed = await kv.list({ prefix: "cars/", limit: 1000, cursor });
-      for (const key of listed.keys) {
-        const name = key.name;
-        // cars/{slug}/_index | cars/{slug}/{n} | cars/{slug}
-        let slug: string | null = null;
-        if (name.endsWith("/_index")) {
-          slug = name.slice("cars/".length, -"/_index".length);
-        } else {
-          const m = name.match(/^cars\/([^/]+)(?:\/(\d+))?$/);
-          if (m) slug = m[1];
-        }
-        if (!slug || seenSlugs.has(slug)) continue;
-        seenSlugs.add(slug);
-      }
-      cursor = listed.list_complete ? undefined : listed.cursor;
-    } while (cursor);
-
-    await Promise.all(
-      [...seenSlugs].map(async (slug) => {
-        const gallery = await getPhotoGallery(slug);
-        if (gallery[0]) map[slug] = gallery[0];
-      }),
+  const result = await query<PhotoRow>(
+    `SELECT DISTINCT ON (photo_key) photo_key, photo_index, ext, updated_at
+     FROM photos
+     ORDER BY photo_key, sort_position, photo_index`,
+  );
+  const map: Record<string, string> = {};
+  for (const row of result.rows) {
+    map[row.photo_key] = photoUrl(
+      row.photo_key,
+      row.photo_index,
+      toMillis(row.updated_at),
+      row.ext,
     );
-
-    return map;
-  } catch {
-    return {};
   }
+  return map;
 }
 
 export async function getPhotoGallery(slug: string): Promise<string[]> {
-  const kv = await getPhotosKv();
-  if (!kv || !/^[a-z0-9-]+$/i.test(slug)) return [];
-
-  try {
-    const index = await readGalleryIndex(kv, slug);
-    return index.items.map((item) =>
-      photoUrl(slug, item.index, item.updatedAt, item.ext),
-    );
-  } catch {
-    return [];
-  }
+  if (!isSlug(slug)) return [];
+  const result = await query<PhotoRow>(
+    `SELECT photo_index, ext, updated_at
+     FROM photos
+     WHERE photo_key = $1
+     ORDER BY sort_position, photo_index`,
+    [slug],
+  );
+  return result.rows.map((row) =>
+    photoUrl(slug, row.photo_index, toMillis(row.updated_at), row.ext),
+  );
 }
 
 export async function listUsedIndices(slug: string): Promise<number[]> {
-  const kv = await getPhotosKv();
-  if (!kv) return [];
-  const index = await readGalleryIndex(kv, slug);
-  return index.items.map((i) => i.index);
+  if (!isSlug(slug)) return [];
+  const result = await query<{ photo_index: number }>(
+    "SELECT photo_index FROM photos WHERE photo_key = $1 ORDER BY sort_position, photo_index",
+    [slug],
+  );
+  return result.rows.map((row) => row.photo_index);
 }
 
-export async function reorderPhotos(
-  slug: string,
-  order: number[],
-): Promise<void> {
-  const kv = await getPhotosKv();
-  if (!kv) {
-    throw new Error("Хранилище фото не подключено");
-  }
-  if (!/^[a-z0-9-]+$/i.test(slug)) {
-    throw new Error("Некорректная модель");
-  }
+export async function reorderPhotos(slug: string, order: number[]): Promise<void> {
+  if (!isSlug(slug)) throw new HttpError("Некорректная модель", 400);
 
-  const gallery = await readGalleryIndex(kv, slug);
-  const byIndex = new Map(gallery.items.map((item) => [item.index, item]));
-
-  if (order.length !== gallery.items.length) {
-    throw new Error("Неверный порядок фото");
-  }
-
-  const seen = new Set<number>();
-  const next: GalleryIndex["items"] = [];
-  for (const idx of order) {
-    if (!Number.isInteger(idx) || seen.has(idx) || !byIndex.has(idx)) {
-      throw new Error("Неверный порядок фото");
+  await withTransaction(async (client) => {
+    const existing = await client.query<{ photo_index: number }>(
+      "SELECT photo_index FROM photos WHERE photo_key = $1 ORDER BY sort_position, photo_index",
+      [slug],
+    );
+    const current = existing.rows.map((row) => row.photo_index);
+    if (order.length !== current.length) {
+      throw new HttpError("Неверный порядок фото", 400);
     }
-    seen.add(idx);
-    next.push(byIndex.get(idx)!);
-  }
+    const known = new Set(current);
+    const seen = new Set<number>();
+    for (const index of order) {
+      if (!Number.isInteger(index) || seen.has(index) || !known.has(index)) {
+        throw new HttpError("Неверный порядок фото", 400);
+      }
+      seen.add(index);
+    }
 
-  await writeGalleryIndex(kv, slug, { items: next });
+    await client.query(
+      "UPDATE photos SET sort_position = -sort_position - 1 WHERE photo_key = $1",
+      [slug],
+    );
+    for (let position = 0; position < order.length; position += 1) {
+      await client.query(
+        "UPDATE photos SET sort_position = $3 WHERE photo_key = $1 AND photo_index = $2",
+        [slug, order[position], position],
+      );
+    }
+  });
 }
 
 export async function putPhoto(
@@ -234,107 +223,150 @@ export async function putPhoto(
   ext: string,
   index?: number,
 ): Promise<PhotoMeta> {
-  const kv = await getPhotosKv();
-  if (!kv) {
-    throw new Error("Хранилище фото не подключено");
+  if (!isSlug(slug)) throw new HttpError("Некорректная модель", 400);
+  extensionFor(contentType, ext);
+  if (data.byteLength > MAX_UPLOAD_BYTES) {
+    throw new HttpError("Фото слишком большое. Попробуйте выбрать другое фото.", 413);
+  }
+  if (
+    index !== undefined &&
+    (!Number.isInteger(index) || index < 0 || index >= MAX_PHOTOS_PER_MODEL)
+  ) {
+    throw new HttpError("Некорректный номер фото", 400);
   }
 
-  const gallery = await readGalleryIndex(kv, slug);
-  const used = new Set(gallery.items.map((i) => i.index));
-
+  const existing = await query<PhotoRow>(
+    "SELECT photo_index, sort_position, object_key FROM photos WHERE photo_key = $1",
+    [slug],
+  );
+  const used = new Set(existing.rows.map((row) => row.photo_index));
   let target = index;
   if (target === undefined) {
     target = 0;
     while (used.has(target) && target < MAX_PHOTOS_PER_MODEL) target += 1;
     if (target >= MAX_PHOTOS_PER_MODEL) {
-      throw new Error(`Можно загрузить не больше ${MAX_PHOTOS_PER_MODEL} фото`);
+      throw new HttpError(`Можно загрузить не больше ${MAX_PHOTOS_PER_MODEL} фото`, 400);
     }
   }
 
-  if (target < 0 || target >= MAX_PHOTOS_PER_MODEL) {
-    throw new Error("Некорректный номер фото");
+  const previous = existing.rows.find((row) => row.photo_index === target);
+  const nextPosition = previous
+    ? previous.sort_position
+    : existing.rows.reduce((max, row) => Math.max(max, row.sort_position), -1) + 1;
+  const objectKey = objectKeyFor(slug, target, ext);
+  const updatedAt = new Date();
+  const placed = await placeFile(objectKey, Buffer.from(data));
+
+  try {
+    if (previous) {
+      await query(
+        `UPDATE photos SET
+           object_key = $3,
+           content_type = $4,
+           ext = $5,
+           byte_size = $6,
+           updated_at = $7
+         WHERE photo_key = $1 AND photo_index = $2`,
+        [slug, target, objectKey, contentType, ext, data.byteLength, updatedAt],
+      );
+    } else {
+      await query(
+        `INSERT INTO photos (
+           photo_key, photo_index, sort_position, object_key, content_type, ext, byte_size, updated_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [slug, target, nextPosition, objectKey, contentType, ext, data.byteLength, updatedAt],
+      );
+    }
+  } catch (error) {
+    await placed.rollback();
+    throw error;
   }
 
-  const meta: PhotoMeta = {
+  await placed.commit();
+  if (previous && previous.object_key !== objectKey) {
+    await fs.rm(resolveSafe(previous.object_key), { force: true }).catch((error) => {
+      console.error(
+        "[photos] failed to delete replaced object",
+        previous.object_key,
+        (error as Error).message,
+      );
+    });
+  }
+
+  return {
     contentType,
     ext,
-    updatedAt: Date.now(),
+    updatedAt: updatedAt.getTime(),
     index: target,
   };
-
-  await kv.put(photoObjectKey(slug, target), data, { metadata: meta });
-
-  const existingPos = gallery.items.findIndex((i) => i.index === target);
-  const entry = { index: target, ext, updatedAt: meta.updatedAt };
-  if (existingPos >= 0) {
-    gallery.items[existingPos] = entry;
-  } else {
-    gallery.items.push(entry);
-  }
-  await writeGalleryIndex(kv, slug, gallery);
-
-  if (target === 0) {
-    try {
-      await kv.delete(legacyPhotoKey(slug));
-    } catch {
-      /* ignore */
-    }
-  }
-
-  return meta;
 }
 
 export async function deletePhoto(slug: string, index: number): Promise<void> {
-  const kv = await getPhotosKv();
-  if (!kv) {
-    throw new Error("Хранилище фото не подключено");
-  }
-  if (index < 0 || index >= MAX_PHOTOS_PER_MODEL) {
-    throw new Error("Некорректный номер фото");
-  }
-  await kv.delete(photoObjectKey(slug, index));
-  if (index === 0) {
-    try {
-      await kv.delete(legacyPhotoKey(slug));
-    } catch {
-      /* ignore */
-    }
+  if (!isSlug(slug)) throw new HttpError("Некорректная модель", 400);
+  if (!Number.isInteger(index) || index < 0 || index >= MAX_PHOTOS_PER_MODEL) {
+    throw new HttpError("Некорректный номер фото", 400);
   }
 
-  const gallery = await readGalleryIndex(kv, slug);
-  await writeGalleryIndex(kv, slug, {
-    items: gallery.items.filter((i) => i.index !== index),
-  });
+  const existing = await query<PhotoRow>(
+    "SELECT object_key FROM photos WHERE photo_key = $1 AND photo_index = $2",
+    [slug, index],
+  );
+  const row = existing.rows[0];
+  if (!row) return;
+
+  await query("DELETE FROM photos WHERE photo_key = $1 AND photo_index = $2", [
+    slug,
+    index,
+  ]);
+  try {
+    await fs.rm(resolveSafe(row.object_key), { force: true });
+  } catch (error) {
+    console.error(
+      "[photos] failed to delete object",
+      row.object_key,
+      (error as Error).message,
+    );
+    throw error;
+  }
 }
 
 export async function getPhoto(
   slug: string,
   index = 0,
 ): Promise<{ body: ArrayBuffer; meta: PhotoMeta } | null> {
-  const kv = await getPhotosKv();
-  if (!kv) return null;
+  if (!isSlug(slug) || !Number.isInteger(index) || index < 0) return null;
+  const result = await query<PhotoRow>(
+    `SELECT photo_index, content_type, ext, updated_at, object_key
+     FROM photos
+     WHERE photo_key = $1 AND photo_index = $2`,
+    [slug, index],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
 
-  const tryKeys =
-    index === 0
-      ? [photoObjectKey(slug, 0), legacyPhotoKey(slug)]
-      : [photoObjectKey(slug, index)];
-
-  for (const key of tryKeys) {
-    const result = await kv.getWithMetadata(key, { type: "arrayBuffer" });
-    if (!result.value) continue;
-
-    const meta: PhotoMeta = {
-      contentType: result.metadata?.contentType ?? "image/jpeg",
-      ext: result.metadata?.ext ?? "jpg",
-      updatedAt: result.metadata?.updatedAt ?? Date.now(),
-      index: result.metadata?.index ?? index,
-    };
-    return { body: result.value, meta };
+  let bytes: Buffer;
+  try {
+    bytes = await fs.readFile(resolveSafe(row.object_key));
+  } catch (error) {
+    console.error(
+      "[photos] object missing or unreadable",
+      row.object_key,
+      (error as NodeJS.ErrnoException).code ?? (error as Error).message,
+    );
+    throw new Error("Файл фотографии не найден в хранилище");
   }
 
-  return null;
-}
-
-export function photoKey(brandSlug: string, modelSlug: string) {
-  return `${brandSlug}-${modelSlug}`;
+  const body = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  return {
+    body,
+    meta: {
+      contentType: row.content_type,
+      ext: row.ext,
+      updatedAt: toMillis(row.updated_at),
+      index: row.photo_index,
+    },
+  };
 }

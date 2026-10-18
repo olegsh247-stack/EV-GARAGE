@@ -1,5 +1,4 @@
 import {
-  brands as staticBrands,
   type Brand,
   type Model,
   type Trim,
@@ -8,7 +7,7 @@ import {
   RANGE_SCALE_MAX,
   POWERTRAIN_LABELS,
 } from "@/data/cars";
-import { loadBrandsFromD1 } from "@/lib/catalogDb";
+import { loadBrandsFromPg } from "@/lib/catalogDb";
 
 export type { Brand, Model, Trim };
 export { fullSpecRows, RANGE_SCALE_MAX, POWERTRAIN_LABELS };
@@ -16,22 +15,18 @@ export { fullSpecRows, RANGE_SCALE_MAX, POWERTRAIN_LABELS };
 let cache: { at: number; brands: Brand[] } | null = null;
 const CACHE_MS = 15_000;
 
-/** Full catalog: D1 when available, otherwise static cars.ts */
+/** Full catalog from PostgreSQL. Database errors propagate; an empty database is not cached. */
 export async function getBrands(): Promise<Brand[]> {
   if (cache && Date.now() - cache.at < CACHE_MS) {
     return cache.brands;
   }
-  try {
-    const fromDb = await loadBrandsFromD1();
-    if (fromDb && fromDb.length > 0) {
-      cache = { at: Date.now(), brands: fromDb };
-      return fromDb;
-    }
-  } catch {
-    /* fallback */
+  const fromDb = await loadBrandsFromPg();
+  if (fromDb.length === 0) {
+    console.warn("[catalog] PostgreSQL вернул пустой каталог");
+    return [];
   }
-  cache = { at: Date.now(), brands: staticBrands };
-  return staticBrands;
+  cache = { at: Date.now(), brands: fromDb };
+  return fromDb;
 }
 
 export async function getBrand(slug: string): Promise<Brand | undefined> {

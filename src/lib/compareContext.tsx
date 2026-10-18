@@ -3,15 +3,14 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
+  useMemo,
   useCallback,
+  useSyncExternalStore,
 } from "react";
 
 const STORAGE_KEY = "ev-garage-compare";
 export const COMPARE_MAX = 4;
 
-// id версии — строка вида "brand-slug/model-slug/trim-slug"
 type CompareContextValue = {
   ids: string[];
   isSelected: (id: string) => boolean;
@@ -22,52 +21,72 @@ type CompareContextValue = {
 };
 
 const CompareContext = createContext<CompareContextValue | null>(null);
+const listeners = new Set<() => void>();
+
+function readRaw() {
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? "[]";
+  } catch {
+    return "[]";
+  }
+}
+
+function writeRaw(raw: string) {
+  try {
+    localStorage.setItem(STORAGE_KEY, raw);
+  } catch {
+    /* localStorage недоступен */
+  }
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function parseIds(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is string => typeof id === "string");
+  } catch {
+    return [];
+  }
+}
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {
-  const [ids, setIds] = useState<string[]>([]);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setIds(JSON.parse(raw));
-    } catch {
-      // localStorage недоступен (приватный режим и т.п.) — просто игнорируем
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-    } catch {
-      // игнорируем
-    }
-  }, [ids, hydrated]);
+  const raw = useSyncExternalStore(subscribe, readRaw, () => "[]");
+  const ids = useMemo(() => parseIds(raw), [raw]);
 
   const toggle = useCallback((id: string) => {
-    setIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= COMPARE_MAX) return prev;
-      return [...prev, id];
-    });
+    const prev = parseIds(readRaw());
+    const next = prev.includes(id)
+      ? prev.filter((item) => item !== id)
+      : prev.length >= COMPARE_MAX
+        ? prev
+        : [...prev, id];
+    writeRaw(JSON.stringify(next));
   }, []);
 
   const remove = useCallback((id: string) => {
-    setIds((prev) => prev.filter((x) => x !== id));
+    const next = parseIds(readRaw()).filter((item) => item !== id);
+    writeRaw(JSON.stringify(next));
   }, []);
 
-  const clear = useCallback(() => setIds([]), []);
+  const clear = useCallback(() => writeRaw("[]"), []);
 
-  const value: CompareContextValue = {
-    ids,
-    isSelected: (id) => ids.includes(id),
-    toggle,
-    remove,
-    clear,
-    isFull: ids.length >= COMPARE_MAX,
-  };
+  const value = useMemo<CompareContextValue>(
+    () => ({
+      ids,
+      isSelected: (id) => ids.includes(id),
+      toggle,
+      remove,
+      clear,
+      isFull: ids.length >= COMPARE_MAX,
+    }),
+    [ids, toggle, remove, clear],
+  );
 
   return (
     <CompareContext.Provider value={value}>{children}</CompareContext.Provider>

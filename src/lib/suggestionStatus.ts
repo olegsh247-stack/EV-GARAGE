@@ -1,47 +1,37 @@
-import { get, put } from "@vercel/blob";
-
-const STATUS_KEY = "meta/suggestion-status.json";
+import { query } from "@/lib/pg";
 
 export type SuggestionStatus = "pending" | "approved" | "rejected";
 
-async function readStatusBlob(): Promise<Record<string, SuggestionStatus>> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return {};
-  try {
-    const result = await get(STATUS_KEY, { access: "private", useCache: false });
-    if (!result || result.statusCode !== 200) return {};
-    return (await new Response(result.stream).json()) as Record<string, SuggestionStatus>;
-  } catch {
-    return {};
-  }
-}
-
-async function writeStatusBlob(map: Record<string, SuggestionStatus>) {
-  await put(STATUS_KEY, JSON.stringify(map), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
-}
+type StatusRow = {
+  suggestion_id: string;
+  status: SuggestionStatus;
+};
 
 export async function getSuggestionStatuses(): Promise<
   Record<string, SuggestionStatus>
 > {
-  return readStatusBlob();
+  const result = await query<StatusRow>(
+    "SELECT suggestion_id, status FROM suggestion_statuses",
+  );
+  const map: Record<string, SuggestionStatus> = {};
+  for (const row of result.rows) map[row.suggestion_id] = row.status;
+  return map;
 }
 
 export async function getPendingSuggestionCount(): Promise<number> {
   const { suggestions } = await import("@/data/suggestions");
-  const statuses = await readStatusBlob();
-  return suggestions.filter((s) => (statuses[s.id] ?? "pending") === "pending")
+  const statuses = await getSuggestionStatuses();
+  return suggestions.filter((item) => (statuses[item.id] ?? "pending") === "pending")
     .length;
 }
 
-export async function setSuggestionStatus(
-  id: string,
-  status: SuggestionStatus
-) {
-  const map = await readStatusBlob();
-  map[id] = status;
-  await writeStatusBlob(map);
+export async function setSuggestionStatus(id: string, status: SuggestionStatus) {
+  await query(
+    `INSERT INTO suggestion_statuses (suggestion_id, status, updated_at)
+     VALUES ($1, $2, now())
+     ON CONFLICT (suggestion_id) DO UPDATE SET
+       status = EXCLUDED.status,
+       updated_at = now()`,
+    [id, status],
+  );
 }

@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jsonError } from "@/lib/apiError";
 import { getContact, setContact } from "@/lib/contactStore";
 
 export async function GET() {
-  const contact = await getContact();
-  return NextResponse.json(contact);
+  try {
+    const contact = await getContact();
+    return NextResponse.json(contact);
+  } catch (error) {
+    return jsonError(error, "contact");
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -20,6 +25,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 });
   }
 
-  await setContact({ phoneDisplay, phoneHref, whatsappHref, telegramHref, email });
-  return NextResponse.json({ ok: true });
+  try {
+    await setContact({ phoneDisplay, phoneHref, whatsappHref, telegramHref, email });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return jsonError(error, "contact");
+  }
 }

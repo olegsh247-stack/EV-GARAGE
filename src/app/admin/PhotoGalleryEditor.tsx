@@ -97,8 +97,6 @@ export function PhotoGalleryEditor({
   const replaceIndexRef = useRef<number | null>(null);
   const dragFromRef = useRef<number | null>(null);
   const dragOverRef = useRef<number | null>(null);
-  const photosRef = useRef(photos);
-  photosRef.current = photos;
 
   const dirty = orderKey(photos) !== savedKey;
 

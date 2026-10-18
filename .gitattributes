@@ -1,0 +1,4 @@
+*.sh text eol=lf
+.gitlab-ci.yml text eol=lf
+.github/workflows/*.yml text eol=lf
+deploy/Caddyfile text eol=lf

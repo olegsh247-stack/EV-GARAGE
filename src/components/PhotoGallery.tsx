@@ -16,23 +16,22 @@ export function PhotoGallery({
   const [active, setActive] = useState(0);
   const stripRef = useRef<HTMLDivElement>(null);
   const count = photos.length;
+  const activeIndex = count === 0 ? 0 : Math.min(active, count - 1);
 
-  useEffect(() => {
-    setActive((i) => (count === 0 ? 0 : Math.min(i, count - 1)));
-  }, [photos, count]);
-
-  // Keep active thumb in view when changing photo
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip || count <= 1) return;
-    const thumb = strip.children[active] as HTMLElement | undefined;
+    const thumb = strip.children[activeIndex] as HTMLElement | undefined;
     thumb?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
-  }, [active, count]);
+  }, [activeIndex, count]);
 
   const go = useCallback(
     (dir: -1 | 1) => {
       if (count <= 1) return;
-      setActive((i) => (i + dir + count) % count);
+      setActive((i) => {
+        const current = count === 0 ? 0 : Math.min(i, count - 1);
+        return (current + dir + count) % count;
+      });
     },
     [count],
   );
@@ -57,7 +56,7 @@ export function PhotoGallery({
     );
   }
 
-  const main = photos[Math.min(active, count - 1)];
+  const main = photos[activeIndex];
 
   return (
     <div>
@@ -88,7 +87,7 @@ export function PhotoGallery({
               <ChevronRight size={18} />
             </button>
             <p className="absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 font-mono text-[10px] text-surface">
-              {active + 1} / {count}
+              {activeIndex + 1} / {count}
             </p>
           </>
         )}
@@ -101,7 +100,7 @@ export function PhotoGallery({
             className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {photos.map((url, i) => {
-              const selected = i === active;
+              const selected = i === activeIndex;
               return (
                 <button
                   key={`${url}-${i}`}

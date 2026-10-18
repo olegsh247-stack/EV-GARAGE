@@ -1,0 +1,15 @@
+[Unit]
+Description=EV-GARAGE
+After=network.target
+
+[Service]
+Type=simple
+User=evgarage
+WorkingDirectory=/opt/ev-garage
+EnvironmentFile=/opt/ev-garage/.env
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -p 3000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

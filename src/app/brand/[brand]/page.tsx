@@ -4,17 +4,12 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ModelCard } from "@/components/ModelCard";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { brands } from "@/data/cars";
 import { getBrand } from "@/lib/catalog";
 import { getPhotoMap, photoKey } from "@/lib/photos";
 import { getCnyRubRate } from "@/lib/exchangeRate";
 import { getArchivedModelKeys, modelKey } from "@/lib/archive";
 
-export const revalidate = 30;
-
-export function generateStaticParams() {
-  return brands.map((b) => ({ brand: b.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function BrandPage({
   params,

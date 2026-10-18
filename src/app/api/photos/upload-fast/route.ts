@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jsonError } from "@/lib/apiError";
 import { MAX_PHOTOS_PER_MODEL, putPhoto } from "@/lib/photos";
 
 const MAX_UPLOAD_BYTES = 4_000_000;
@@ -63,9 +64,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       index: meta.index,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Ошибка загрузки" },
-      { status: 400 },
-    );
+    return jsonError(error, "photos");
   }
 }

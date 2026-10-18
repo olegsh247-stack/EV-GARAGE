@@ -1,0 +1,26 @@
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  image: node:22-bookworm
+  script:
+    - npm ci
+    - npm run lint
+    - npm run typecheck
+    - npm run build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+deploy:
+  stage: deploy
+  image: alpine:3.21
+  needs: ["test"]
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SSH_HOST && $SSH_USER && $SSH_PRIVATE_KEY && $SSH_KNOWN_HOSTS
+  script:
+    - echo "Production updates run from GitHub Actions on main. This job does not change the server."

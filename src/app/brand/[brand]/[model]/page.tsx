@@ -2,16 +2,9 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { TrimDetailView } from "@/components/TrimDetailView";
-import { brands } from "@/data/cars";
 import { getModel, baseTrim } from "@/lib/catalog";
 
-export const revalidate = 30;
-
-export function generateStaticParams() {
-  return brands.flatMap((b) =>
-    b.models.map((m) => ({ brand: b.slug, model: m.slug }))
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default async function ModelPage({
   params,

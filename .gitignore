@@ -1,8 +1,11 @@
 node_modules
 .next
-.open-next
-.wrangler
-.dev.vars
 .env*
+!.env.example
+data/photos
 .DS_Store
 *.log
+.cursor
+.wrangler
+tsconfig.tsbuildinfo
+docs/

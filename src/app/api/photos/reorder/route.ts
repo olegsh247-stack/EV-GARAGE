@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jsonError } from "@/lib/apiError";
 import { reorderPhotos } from "@/lib/photos";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -25,9 +26,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await reorderPhotos(slug, order);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Ошибка сортировки" },
-      { status: 400 },
-    );
+    return jsonError(error, "photos");
   }
 }

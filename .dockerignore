@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.cursor
+/data
+.env
+.env.*
+*.md
