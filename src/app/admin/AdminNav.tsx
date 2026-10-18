@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Lightbulb, Archive, Pencil, Plus } from "lucide-react";
+import { ExternalLink, Lightbulb, Archive, Pencil, Plus, Home } from "lucide-react";
 import { getPendingSuggestionCount } from "@/lib/suggestionStatus";
 import { LogoutButton } from "./LogoutButton";
 
@@ -23,6 +23,13 @@ export async function AdminNav({ title }: { title: string }) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
+        <Link
+          href="/admin"
+          className="flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-xs font-medium text-ink transition-colors hover:border-charge hover:text-charge"
+        >
+          <Home size={13} />
+          Домой
+        </Link>
         <Link
           href="/"
           target="_blank"

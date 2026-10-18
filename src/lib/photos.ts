@@ -64,6 +64,17 @@ function toMillis(value: Date | string) {
   return Number.isNaN(ms) ? Date.now() : ms;
 }
 
+/** Проверка по первым байтам: заявленный тип должен совпадать с настоящим файлом. */
+function looksLike(contentType: string, data: Uint8Array) {
+  const at = (i: number, ...bytes: number[]) => bytes.every((b, k) => data[i + k] === b);
+  if (contentType === "image/jpeg") return at(0, 0xff, 0xd8, 0xff);
+  if (contentType === "image/png") return at(0, 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+  if (contentType === "image/webp") {
+    return at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50);
+  }
+  return false;
+}
+
 function extensionFor(contentType: string, ext: string) {
   const expected = PHOTO_EXT_BY_TYPE[contentType as PhotoContentType];
   if (!expected || expected !== ext) {
@@ -225,6 +236,9 @@ export async function putPhoto(
 ): Promise<PhotoMeta> {
   if (!isSlug(slug)) throw new HttpError("Некорректная модель", 400);
   extensionFor(contentType, ext);
+  if (!looksLike(contentType, new Uint8Array(data, 0, Math.min(12, data.byteLength)))) {
+    throw new HttpError("Файл не является изображением заявленного формата", 400);
+  }
   if (data.byteLength > MAX_UPLOAD_BYTES) {
     throw new HttpError("Фото слишком большое. Попробуйте выбрать другое фото.", 413);
   }

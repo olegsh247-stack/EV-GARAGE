@@ -27,9 +27,16 @@ async function prepareImage(file: File): Promise<File> {
     return file;
   }
 
-  const bitmap = await createImageBitmap(file, {
-    imageOrientation: "from-image",
-  });
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, {
+      imageOrientation: "from-image",
+    });
+  } catch {
+    throw new Error(
+      "Не удалось открыть изображение. Поддерживаются JPG, PNG и WEBP (фото HEIC с iPhone сохраните как JPG).",
+    );
+  }
 
   const scale = Math.min(1, MAX_IMAGE_SIZE / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -45,6 +52,9 @@ async function prepareImage(file: File): Promise<File> {
     throw new Error("Не удалось обработать изображение");
   }
 
+  // JPEG не хранит прозрачность: без белой подложки прозрачные места PNG станут чёрными.
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
   context.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
 
