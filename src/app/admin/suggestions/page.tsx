@@ -1,5 +1,7 @@
 import { suggestions } from "@/data/suggestions";
 import { getSuggestionStatuses } from "@/lib/suggestionStatus";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { SuggestionActions } from "../SuggestionActions";
 import { AdminNav } from "../AdminNav";
 
@@ -56,10 +58,20 @@ export default async function AdminSuggestionsPage() {
                     )}
                   </div>
                 </div>
-                <SuggestionActions
-                  id={s.id}
-                  initialStatus={statuses[s.id] ?? "pending"}
-                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <SuggestionActions
+                    id={s.id}
+                    initialStatus={statuses[s.id] ?? "pending"}
+                  />
+                  {s.type === "new" && (statuses[s.id] ?? "pending") !== "rejected" && (
+                    <Link
+                      href={`/admin/add?suggestion=${encodeURIComponent(s.id)}`}
+                      className="flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-surface transition-colors hover:bg-deep"
+                    >
+                      <Plus size={13} /> Добавить в каталог
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>

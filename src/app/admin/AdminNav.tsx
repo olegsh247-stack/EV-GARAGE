@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Lightbulb, Archive, Pencil } from "lucide-react";
+import { ExternalLink, Lightbulb, Archive, Pencil, Plus } from "lucide-react";
 import { getPendingSuggestionCount } from "@/lib/suggestionStatus";
 import { LogoutButton } from "./LogoutButton";
 
@@ -30,6 +30,13 @@ export async function AdminNav({ title }: { title: string }) {
         >
           <ExternalLink size={13} />
           На сайте
+        </Link>
+        <Link
+          href="/admin/add"
+          className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-xs font-medium text-surface transition-colors hover:bg-deep"
+        >
+          <Plus size={13} />
+          Добавить модель
         </Link>
         <Link
           href="/admin/suggestions"

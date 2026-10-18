@@ -15,6 +15,11 @@ export { fullSpecRows, RANGE_SCALE_MAX, POWERTRAIN_LABELS };
 let cache: { at: number; brands: Brand[] } | null = null;
 const CACHE_MS = 15_000;
 
+/** Сбросить кэш каталога — после записи в базу из админки. */
+export function invalidateCatalogCache() {
+  cache = null;
+}
+
 /** Full catalog from PostgreSQL. Database errors propagate; an empty database is not cached. */
 export async function getBrands(): Promise<Brand[]> {
   if (cache && Date.now() - cache.at < CACHE_MS) {

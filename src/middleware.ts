@@ -31,6 +31,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/api/archive",
+    "/api/catalog/add",
     "/api/suggestions",
     "/api/videos",
     "/api/contact",
